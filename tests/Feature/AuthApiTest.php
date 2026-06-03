@@ -59,6 +59,37 @@ class AuthApiTest extends TestCase
         $this->assertSame(1, PersonalAccessToken::query()->count());
     }
 
+    public function test_login_accepts_admin_user_with_password_0000(): void
+    {
+        $gallery = Gallery::query()->create([
+            'name' => 'Aleppo',
+            'address' => 'Main Street',
+        ]);
+
+        User::query()->create([
+            'user_name' => 'admin',
+            'password' => Hash::make('0000'),
+            'gallery_id' => $gallery->id,
+            'permetions_level' => 1,
+            'salary' => 0,
+            'phone' => '',
+        ]);
+
+        $response = $this->postJson('/api/auth/login', [
+            'username' => 'admin',
+            'password' => '0000',
+        ]);
+
+        $response
+            ->assertOk()
+            ->assertJsonPath('status', 'success')
+            ->assertJsonPath('message', __('responses.success', [], 'ar'))
+            ->assertJsonPath('data.user_name', 'admin');
+
+        $this->assertNotEmpty($response->json('data.token'));
+        $this->assertSame(1, PersonalAccessToken::query()->count());
+    }
+
     public function test_logout_revokes_sanctum_token_and_returns_success(): void
     {
         $user = User::factory()->create([
