@@ -1,0 +1,3857 @@
+{
+  "info": {
+    "_postman_id": "f5b7da72-86f4-45a5-b9d8-00e5e9c74114",
+    "name": "Beroya API - Route Complete Docs",
+    "description": "Current Laravel route contract with representative examples for the old Beroya frontend. Protected routes use Sanctum bearer tokens, sales and account folders map the legacy getSales/getWeeklyAccounts/changePassword flows to the new Laravel endpoints, and multipart examples are included for file uploads.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost/api"
+    },
+    {
+      "key": "auth_token",
+      "value": ""
+    },
+    {
+      "key": "token_expiry",
+      "value": ""
+    },
+    {
+      "key": "user_id",
+      "value": "1"
+    },
+    {
+      "key": "gallery_id",
+      "value": "1"
+    },
+    {
+      "key": "sale_id",
+      "value": "101"
+    },
+    {
+      "key": "week_num",
+      "value": "22"
+    },
+    {
+      "key": "year",
+      "value": "2026"
+    },
+    {
+      "key": "account_id",
+      "value": "301"
+    },
+    {
+      "key": "bonus_id",
+      "value": "44"
+    },
+    {
+      "key": "deduction_id",
+      "value": "55"
+    },
+    {
+      "key": "gallery_phone_id",
+      "value": "1"
+    },
+    {
+      "key": "market_id",
+      "value": "1"
+    },
+    {
+      "key": "model_id",
+      "value": "1"
+    },
+    {
+      "key": "car_id",
+      "value": "1"
+    },
+    {
+      "key": "order_id",
+      "value": "1"
+    }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"admin\",\n  \"password\": \"admin123\",\n  \"currentWeekNum\": 22,\n  \"currentYear\": 2026\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [
+            {
+              "name": "200 OK - Success",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"تم تنفيذ الطلب بنجاح\",\n  \"data\": {\n    \"id\": 1,\n    \"user_name\": \"admin\",\n    \"gallery_id\": 1,\n    \"permetions_level\": 1,\n    \"salary\": 2500,\n    \"phone\": \"0999000001\",\n    \"token\": \"1|sample-sanctum-token\",\n    \"token_expiry\": \"2026-06-03 12:00:00\"\n  }\n}"
+            },
+            {
+              "name": "200 OK - Wrong Credentials",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"status\": \"failure\",\n  \"message\": \"فشل تسجيل الدخول\",\n  \"data\": null\n}"
+            },
+            {
+              "name": "429 Too Many Attempts",
+              "originalRequest": {},
+              "status": "Too Many Requests",
+              "code": 429,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"status\": \"failure\",\n  \"message\": \"عدد محاولات تسجيل الدخول كبير جداً. حاول لاحقاً.\",\n  \"data\": null\n}"
+            }
+          ],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const payload = pm.response.json();",
+                  "if (payload?.status === 'success' && payload?.data) {",
+                  "  pm.collectionVariables.set('auth_token', payload.data.token || '');",
+                  "  pm.collectionVariables.set('token_expiry', payload.data.token_expiry || '');",
+                  "  pm.collectionVariables.set('user_id', String(payload.data.id || ''));",
+                  "  pm.collectionVariables.set('gallery_id', String(payload.data.gallery_id || ''));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "description": "Public login endpoint. Returns a Sanctum bearer token inside `data.token` and a token expiry timestamp inside `data.token_expiry`. The old frontend still sends `currentWeekNum` and `currentYear` so the backend can seed the current week/accounts after login."
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/logout",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "logout"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"تم تسجيل الخروج بنجاح\",\n  \"data\": null\n}"
+            },
+            {
+              "name": "401 Unauthorized",
+              "originalRequest": {},
+              "status": "Unauthorized",
+              "code": 401,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"status\": \"failure\",\n  \"message\": \"التوكن غير صالح\",\n  \"data\": null\n}"
+            }
+          ],
+          "description": "Requires only the Sanctum bearer token. The new Laravel route no longer expects CSRF headers."
+        },
+        {
+          "name": "Bootstrap Admin",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/bootstrap-admin",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "bootstrap-admin"
+              ]
+            },
+            "description": "Development-only bootstrap endpoint. It creates the initial admin users when `legacy.allow_admin_init` is enabled."
+          },
+          "response": [
+            {
+              "name": "200 OK - Created",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"تم إنشاء الحساب الإداري بنجاح\",\n  \"data\": {\n    \"admin\": {\n      \"user_name\": \"admin\",\n      \"password\": \"R7d3F2a9X1c8b5e0\",\n      \"note\": \"Save the temporary password and change it after first login.\"\n    },\n    \"financial\": {\n      \"user_name\": \"المدير المالي\",\n      \"password\": \"T8k1M4p6Q2n9v3s7\"\n    },\n    \"guest\": {\n      \"user_name\": \"guest\",\n      \"password\": \"H5j2L8x4Z7r1w9c3\"\n    }\n  }\n}"
+            },
+            {
+              "name": "400 Bootstrap Disabled",
+              "originalRequest": {},
+              "status": "Bad Request",
+              "code": 400,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"status\": \"failure\",\n  \"message\": \"إنشاء الحساب الإداري معطل\",\n  \"data\": null\n}"
+            },
+            {
+              "name": "400 Users Exist",
+              "originalRequest": {},
+              "status": "Bad Request",
+              "code": 400,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"status\": \"failure\",\n  \"message\": \"هناك مستخدمون بالفعل في النظام\",\n  \"data\": null\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Users",
+      "item": [
+        {
+          "name": "List Users",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/users",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "users"
+              ]
+            },
+            "description": ""
+          },
+          "response": [
+            {
+              "name": "200 OK - Success",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"تم تنفيذ الطلب بنجاح\",\n  \"data\": [\n    {\n      \"id\": 1,\n      \"user_name\": \"admin\",\n      \"gallery_id\": 1,\n      \"permetions_level\": 1,\n      \"salary\": 2500,\n      \"phone\": \"0999000001\",\n      \"last_login\": \"2026-05-28 08:12:31\",\n      \"is_active\": true\n    },\n    {\n      \"id\": 2,\n      \"user_name\": \"sales1\",\n      \"gallery_id\": 1,\n      \"permetions_level\": 4,\n      \"salary\": 1300,\n      \"phone\": \"0999000002\",\n      \"last_login\": \"2026-05-27 17:05:10\",\n      \"is_active\": true\n    }\n  ]\n}"
+            },
+            {
+              "name": "401 Unauthorized",
+              "originalRequest": {},
+              "status": "Unauthorized",
+              "code": 401,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"status\": \"failure\",\n  \"message\": \"التوكن غير صالح\",\n  \"data\": null\n}"
+            }
+          ],
+          "description": "Returns the users visible to the authenticated admin."
+        },
+        {
+          "name": "Create User",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/users",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "users"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"user_name\": \"sales2\",\n  \"password\": \"sales123\",\n  \"gallery_id\": 1,\n  \"permetions_level\": 4,\n  \"salary\": 1300,\n  \"phone\": \"0999000003\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [
+            {
+              "name": "200 OK - Success",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"تم تنفيذ الطلب بنجاح\",\n  \"data\": {\n    \"id\": 3,\n    \"user_name\": \"sales2\",\n    \"gallery_id\": 1,\n    \"permetions_level\": 4,\n    \"salary\": 1200,\n    \"phone\": \"0999000003\",\n    \"last_login\": null,\n    \"is_active\": true\n  }\n}"
+            },
+            {
+              "name": "422 Validation Error",
+              "originalRequest": {},
+              "status": "Unprocessable Entity",
+              "code": 422,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"message\": \"The given data was invalid.\",\n  \"errors\": {\n    \"user_name\": [\n      \"The user name field is required.\"\n    ],\n    \"password\": [\n      \"The password field is required.\"\n    ],\n    \"gallery_id\": [\n      \"The gallery id field is required.\"\n    ],\n    \"permetions_level\": [\n      \"The permetions level field is required.\"\n    ],\n    \"salary\": [\n      \"The salary field is required.\"\n    ],\n    \"phone\": [\n      \"The phone field is required.\"\n    ]\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Show User",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/users/{{user_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "users",
+                "{{user_id}}"
+              ]
+            },
+            "description": ""
+          },
+          "response": [
+            {
+              "name": "200 OK - Success",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"تم تنفيذ الطلب بنجاح\",\n  \"data\": {\n    \"id\": 2,\n    \"user_name\": \"sales1\",\n    \"gallery_id\": 1,\n    \"permetions_level\": 4,\n    \"salary\": 1300,\n    \"phone\": \"0999000002\",\n    \"last_login\": \"2026-05-27 17:05:10\",\n    \"is_active\": true\n  }\n}"
+            },
+            {
+              "name": "404 Not Found",
+              "originalRequest": {},
+              "status": "Not Found",
+              "code": 404,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"status\": \"failure\",\n  \"message\": \"المورد المطلوب غير موجود\",\n  \"data\": null\n}"
+            }
+          ]
+        },
+        {
+          "name": "Update User",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/users/{{user_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "users",
+                "{{user_id}}"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"user_name\": \"sales1\",\n  \"password\": \"sales123\",\n  \"gallery_id\": 1,\n  \"permetions_level\": 4,\n  \"salary\": 1200,\n  \"phone\": \"0999000002\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [
+            {
+              "name": "200 OK - Success",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"تم تنفيذ الطلب بنجاح\",\n  \"data\": {\n    \"id\": 2,\n    \"user_name\": \"sales1-updated\",\n    \"gallery_id\": 1,\n    \"permetions_level\": 4,\n    \"salary\": 1400,\n    \"phone\": \"0999000002\",\n    \"last_login\": \"2026-05-27 17:05:10\",\n    \"is_active\": true\n  }\n}"
+            },
+            {
+              "name": "403 Forbidden",
+              "originalRequest": {},
+              "status": "Forbidden",
+              "code": 403,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"status\": \"failure\",\n  \"message\": \"لا تملك صلاحية تنفيذ هذا الإجراء\",\n  \"data\": \"your computer harmly damaged\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Delete User",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/users/{{user_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "users",
+                "{{user_id}}"
+              ]
+            },
+            "description": ""
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"تم حذف المستخدم بنجاح\",\n  \"data\": null\n}"
+            },
+            {
+              "name": "400 Cannot Delete Self",
+              "originalRequest": {},
+              "status": "Bad Request",
+              "code": 400,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"status\": \"failure\",\n  \"message\": \"لا يمكنك حذف حسابك الخاص\",\n  \"data\": null\n}"
+            }
+          ]
+        },
+        {
+          "name": "Update User Password",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/users/{{user_id}}/password",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "users",
+                "{{user_id}}",
+                "password"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id\": 1,\n  \"old_password\": \"admin123\",\n  \"new_password\": \"admin456\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"تم تحديث كلمة المرور بنجاح\",\n  \"data\": null\n}"
+            },
+            {
+              "name": "422 Invalid ID",
+              "originalRequest": {},
+              "status": "Unprocessable Entity",
+              "code": 422,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"status\": \"failure\",\n  \"message\": \"المعرف غير صالح\",\n  \"data\": \"Invalid ID\"\n}"
+            },
+            {
+              "name": "422 Old Password Incorrect",
+              "originalRequest": {},
+              "status": "Unprocessable Entity",
+              "code": 422,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"status\": \"failure\",\n  \"message\": \"كلمة المرور القديمة غير صحيحة\",\n  \"data\": \"Old password is incorrect\"\n}"
+            }
+          ],
+          "description": "Frontend note: the legacy thunk posts `id`, `old_password`, and `new_password`, but the Laravel route is now `PUT /users/{user}/password`."
+        }
+      ],
+      "description": "User management endpoints. The frontend `changePassword` thunk now maps to `PUT /users/{user}/password`."
+    },
+    {
+      "name": "Galleries",
+      "item": [
+        {
+          "name": "List Galleries",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/galleries",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "galleries"
+              ]
+            },
+            "description": ""
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"?? ????? ????? ?????\",\n  \"data\": [\n    {\n      \"id\": 1,\n      \"name\": \"Al Noor Gallery\",\n      \"address\": \"Damascus - Mazzeh Highway\"\n    }\n  ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "Create Gallery",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/galleries",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "galleries"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Al Noor Gallery\",\n  \"address\": \"Damascus - Mazzeh Highway\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"?? ????? ????? ?????\",\n  \"data\": {\n    \"id\": 1,\n    \"name\": \"Al Noor Gallery\",\n    \"address\": \"Damascus - Mazzeh Highway\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Show Gallery",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/galleries/{{gallery_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "galleries",
+                "{{gallery_id}}"
+              ]
+            },
+            "description": ""
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"?? ????? ????? ?????\",\n  \"data\": {\n    \"id\": 1,\n    \"name\": \"Al Noor Gallery\",\n    \"address\": \"Damascus - Mazzeh Highway\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Update Gallery",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/galleries/{{gallery_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "galleries",
+                "{{gallery_id}}"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Al Noor Gallery\",\n  \"address\": \"Damascus - Mazzeh Highway\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"?? ????? ????? ?????\",\n  \"data\": {\n    \"id\": 1,\n    \"name\": \"Al Noor Gallery\",\n    \"address\": \"Damascus - Mazzeh Highway\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Delete Gallery",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/galleries/{{gallery_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "galleries",
+                "{{gallery_id}}"
+              ]
+            },
+            "description": ""
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"?? ????? ????? ?????\",\n  \"data\": null\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Gallery Phones",
+      "item": [
+        {
+          "name": "List Gallery Phones",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/gallery-phones",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "gallery-phones"
+              ]
+            },
+            "description": ""
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"?? ????? ????? ?????\",\n  \"data\": [\n    {\n      \"id\": 1,\n      \"phone\": \"0987654321\",\n      \"gallery_id\": 1\n    }\n  ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "Create Gallery Phone",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/gallery-phones",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "gallery-phones"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone\": \"0987654321\",\n  \"gallery_id\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"?? ????? ????? ?????\",\n  \"data\": {\n    \"id\": 1,\n    \"phone\": \"0987654321\",\n    \"gallery_id\": 1\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Show Gallery Phone",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/gallery-phones/{{gallery_phone_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "gallery-phones",
+                "{{gallery_phone_id}}"
+              ]
+            },
+            "description": ""
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"?? ????? ????? ?????\",\n  \"data\": {\n    \"id\": 1,\n    \"phone\": \"0987654321\",\n    \"gallery_id\": 1\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Update Gallery Phone",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/gallery-phones/{{gallery_phone_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "gallery-phones",
+                "{{gallery_phone_id}}"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone\": \"0987654321\",\n  \"gallery_id\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"?? ????? ????? ?????\",\n  \"data\": {\n    \"id\": 1,\n    \"phone\": \"0987654321\",\n    \"gallery_id\": 1\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Delete Gallery Phone",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/gallery-phones/{{gallery_phone_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "gallery-phones",
+                "{{gallery_phone_id}}"
+              ]
+            },
+            "description": ""
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"?? ????? ????? ?????\",\n  \"data\": null\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Markets",
+      "item": [
+        {
+          "name": "List Markets",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/markets",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "markets"
+              ]
+            },
+            "description": ""
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"?? ????? ????? ?????\",\n  \"data\": [\n    {\n      \"id\": 1,\n      \"name\": \"Toyota\",\n      \"image\": \"toyota.png\"\n    }\n  ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "Create Market (multipart)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/markets",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "markets"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "name",
+                  "value": "Toyota",
+                  "type": "text"
+                },
+                {
+                  "key": "image",
+                  "type": "file",
+                  "src": [
+                    "/absolute/path/to/toyota.png"
+                  ]
+                }
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"?? ????? ????? ?????\",\n  \"data\": {\n    \"id\": 1,\n    \"name\": \"Toyota\",\n    \"image\": \"toyota.png\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Show Market",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/markets/{{market_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "markets",
+                "{{market_id}}"
+              ]
+            },
+            "description": ""
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"?? ????? ????? ?????\",\n  \"data\": {\n    \"id\": 1,\n    \"name\": \"Toyota\",\n    \"image\": \"toyota.png\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Update Market (multipart)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/markets/{{market_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "markets",
+                "{{market_id}}"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "name",
+                  "value": "Toyota",
+                  "type": "text"
+                },
+                {
+                  "key": "image",
+                  "type": "file",
+                  "src": [
+                    "/absolute/path/to/toyota-updated.png"
+                  ]
+                }
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"?? ????? ????? ?????\",\n  \"data\": {\n    \"id\": 1,\n    \"name\": \"Toyota\",\n    \"image\": \"toyota.png\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Delete Market",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/markets/{{market_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "markets",
+                "{{market_id}}"
+              ]
+            },
+            "description": ""
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"?? ????? ????? ?????\",\n  \"data\": {\n    \"id\": 1,\n    \"name\": \"Toyota\",\n    \"image\": \"toyota.png\"\n  }\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Car Models",
+      "item": [
+        {
+          "name": "List Car Models",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/car-models",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "car-models"
+              ]
+            },
+            "description": ""
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"?? ????? ????? ?????\",\n  \"data\": [\n    {\n      \"id\": 1,\n      \"name\": \"Corolla\",\n      \"market_id\": 1\n    }\n  ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "Create Car Model",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/car-models",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "car-models"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Corolla\",\n  \"market_id\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"?? ????? ????? ?????\",\n  \"data\": {\n    \"id\": 1,\n    \"name\": \"Corolla\",\n    \"market_id\": 1\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Show Car Model",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/car-models/{{model_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "car-models",
+                "{{model_id}}"
+              ]
+            },
+            "description": ""
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"?? ????? ????? ?????\",\n  \"data\": {\n    \"id\": 1,\n    \"name\": \"Corolla\",\n    \"market_id\": 1\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Update Car Model",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/car-models/{{model_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "car-models",
+                "{{model_id}}"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Corolla\",\n  \"market_id\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"?? ????? ????? ?????\",\n  \"data\": {\n    \"id\": 1,\n    \"name\": \"Corolla\",\n    \"market_id\": 1\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Delete Car Model",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/car-models/{{model_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "car-models",
+                "{{model_id}}"
+              ]
+            },
+            "description": ""
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"?? ????? ????? ?????\",\n  \"data\": null\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Cars",
+      "item": [
+        {
+          "name": "List Cars",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/cars",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "cars"
+              ]
+            },
+            "description": ""
+          },
+          "response": [
+            {
+              "name": "200 OK - Public Sanitized",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"?? ????? ????? ?????\",\n  \"data\": [\n    {\n      \"id\": 1,\n      \"market_id\": 1,\n      \"model_id\": 1,\n      \"year\": \"2021\",\n      \"gasoline\": \"Gasoline\",\n      \"engine\": \"1.8L\",\n      \"transmission\": \"Automatic\",\n      \"color\": \"White\",\n      \"distance\": \"54000 km\",\n      \"imported\": \"No\",\n      \"spray\": \"Factory paint\",\n      \"status\": \"Available\",\n      \"description\": \"Single owner, excellent condition.\",\n      \"plateNumber\": \"\",\n      \"notes\": \"Inspection passed in April.\",\n      \"price\": 18250,\n      \"possession\": \"Ready\",\n      \"owner_name\": \"\",\n      \"owner_phone\": \"\",\n      \"gallery_id\": 1,\n      \"image_1\": \"car1.jpg\",\n      \"image_2\": \"\",\n      \"image_3\": \"\",\n      \"image_4\": \"\",\n      \"image_5\": \"\",\n      \"image_6\": \"\",\n      \"car_sale_state\": 1\n    }\n  ]\n}"
+            },
+            {
+              "name": "200 OK - Authorized Full Data",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"?? ????? ????? ?????\",\n  \"data\": [\n    {\n      \"id\": 1,\n      \"market_id\": 1,\n      \"model_id\": 1,\n      \"year\": \"2021\",\n      \"gasoline\": \"Gasoline\",\n      \"engine\": \"1.8L\",\n      \"transmission\": \"Automatic\",\n      \"color\": \"White\",\n      \"distance\": \"54000 km\",\n      \"imported\": \"No\",\n      \"spray\": \"Factory paint\",\n      \"status\": \"Available\",\n      \"description\": \"Single owner, excellent condition.\",\n      \"plateNumber\": \"SHM-4521\",\n      \"notes\": \"Inspection passed in April.\",\n      \"price\": 18250,\n      \"possession\": \"Ready\",\n      \"owner_name\": \"Ahmad Khaled\",\n      \"owner_phone\": \"0999123456\",\n      \"gallery_id\": 1,\n      \"image_1\": \"car1.jpg\",\n      \"image_2\": \"\",\n      \"image_3\": \"\",\n      \"image_4\": \"\",\n      \"image_5\": \"\",\n      \"image_6\": \"\",\n      \"car_sale_state\": 1\n    }\n  ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "Create Car (multipart)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/cars",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "cars"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "market_id",
+                  "value": "1",
+                  "type": "text"
+                },
+                {
+                  "key": "model_id",
+                  "value": "1",
+                  "type": "text"
+                },
+                {
+                  "key": "year",
+                  "value": "2021",
+                  "type": "text"
+                },
+                {
+                  "key": "gasoline",
+                  "value": "Gasoline",
+                  "type": "text"
+                },
+                {
+                  "key": "engine",
+                  "value": "1.8L",
+                  "type": "text"
+                },
+                {
+                  "key": "transmission",
+                  "value": "Automatic",
+                  "type": "text"
+                },
+                {
+                  "key": "color",
+                  "value": "White",
+                  "type": "text"
+                },
+                {
+                  "key": "distance",
+                  "value": "54000 km",
+                  "type": "text"
+                },
+                {
+                  "key": "imported",
+                  "value": "No",
+                  "type": "text"
+                },
+                {
+                  "key": "spray",
+                  "value": "Factory paint",
+                  "type": "text"
+                },
+                {
+                  "key": "status",
+                  "value": "Available",
+                  "type": "text"
+                },
+                {
+                  "key": "description",
+                  "value": "Single owner, excellent condition.",
+                  "type": "text"
+                },
+                {
+                  "key": "plateNumber",
+                  "value": "SHM-4521",
+                  "type": "text"
+                },
+                {
+                  "key": "notes",
+                  "value": "Inspection passed in April.",
+                  "type": "text"
+                },
+                {
+                  "key": "price",
+                  "value": "18250",
+                  "type": "text"
+                },
+                {
+                  "key": "possession",
+                  "value": "Ready",
+                  "type": "text"
+                },
+                {
+                  "key": "owner_name",
+                  "value": "Ahmad Khaled",
+                  "type": "text"
+                },
+                {
+                  "key": "owner_phone",
+                  "value": "0999123456",
+                  "type": "text"
+                },
+                {
+                  "key": "gallery_id",
+                  "value": "1",
+                  "type": "text"
+                },
+                {
+                  "key": "image_1",
+                  "type": "file",
+                  "src": [
+                    "/absolute/path/to/car1.jpg"
+                  ]
+                },
+                {
+                  "key": "image_2",
+                  "type": "file",
+                  "src": [
+                    "/absolute/path/to/car2.jpg"
+                  ]
+                }
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"?? ????? ????? ?????\",\n  \"data\": {\n    \"id\": 1,\n    \"market_id\": 1,\n    \"model_id\": 1,\n    \"year\": \"2021\",\n    \"gasoline\": \"Gasoline\",\n    \"engine\": \"1.8L\",\n    \"transmission\": \"Automatic\",\n    \"color\": \"White\",\n    \"distance\": \"54000 km\",\n    \"imported\": \"No\",\n    \"spray\": \"Factory paint\",\n    \"status\": \"Available\",\n    \"description\": \"Single owner, excellent condition.\",\n    \"plateNumber\": \"SHM-4521\",\n    \"notes\": \"Inspection passed in April.\",\n    \"price\": 18250,\n    \"possession\": \"Ready\",\n    \"owner_name\": \"Ahmad Khaled\",\n    \"owner_phone\": \"0999123456\",\n    \"gallery_id\": 1,\n    \"image_1\": \"car1.jpg\",\n    \"image_2\": \"\",\n    \"image_3\": \"\",\n    \"image_4\": \"\",\n    \"image_5\": \"\",\n    \"image_6\": \"\",\n    \"car_sale_state\": 1\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Show Car",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/cars/{{car_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "cars",
+                "{{car_id}}"
+              ]
+            },
+            "description": ""
+          },
+          "response": [
+            {
+              "name": "200 OK - Public Sanitized",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"?? ????? ????? ?????\",\n  \"data\": {\n    \"id\": 1,\n    \"market_id\": 1,\n    \"model_id\": 1,\n    \"year\": \"2021\",\n    \"gasoline\": \"Gasoline\",\n    \"engine\": \"1.8L\",\n    \"transmission\": \"Automatic\",\n    \"color\": \"White\",\n    \"distance\": \"54000 km\",\n    \"imported\": \"No\",\n    \"spray\": \"Factory paint\",\n    \"status\": \"Available\",\n    \"description\": \"Single owner, excellent condition.\",\n    \"plateNumber\": \"\",\n    \"notes\": \"Inspection passed in April.\",\n    \"price\": 18250,\n    \"possession\": \"Ready\",\n    \"owner_name\": \"\",\n    \"owner_phone\": \"\",\n    \"gallery_id\": 1,\n    \"image_1\": \"car1.jpg\",\n    \"image_2\": \"\",\n    \"image_3\": \"\",\n    \"image_4\": \"\",\n    \"image_5\": \"\",\n    \"image_6\": \"\",\n    \"car_sale_state\": 1\n  }\n}"
+            },
+            {
+              "name": "200 OK - Authorized Full Data",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"?? ????? ????? ?????\",\n  \"data\": {\n    \"id\": 1,\n    \"market_id\": 1,\n    \"model_id\": 1,\n    \"year\": \"2021\",\n    \"gasoline\": \"Gasoline\",\n    \"engine\": \"1.8L\",\n    \"transmission\": \"Automatic\",\n    \"color\": \"White\",\n    \"distance\": \"54000 km\",\n    \"imported\": \"No\",\n    \"spray\": \"Factory paint\",\n    \"status\": \"Available\",\n    \"description\": \"Single owner, excellent condition.\",\n    \"plateNumber\": \"SHM-4521\",\n    \"notes\": \"Inspection passed in April.\",\n    \"price\": 18250,\n    \"possession\": \"Ready\",\n    \"owner_name\": \"Ahmad Khaled\",\n    \"owner_phone\": \"0999123456\",\n    \"gallery_id\": 1,\n    \"image_1\": \"car1.jpg\",\n    \"image_2\": \"\",\n    \"image_3\": \"\",\n    \"image_4\": \"\",\n    \"image_5\": \"\",\n    \"image_6\": \"\",\n    \"car_sale_state\": 1\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Update Car (multipart)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/cars/{{car_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "cars",
+                "{{car_id}}"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "market_id",
+                  "value": "1",
+                  "type": "text"
+                },
+                {
+                  "key": "model_id",
+                  "value": "1",
+                  "type": "text"
+                },
+                {
+                  "key": "year",
+                  "value": "2021",
+                  "type": "text"
+                },
+                {
+                  "key": "gasoline",
+                  "value": "Gasoline",
+                  "type": "text"
+                },
+                {
+                  "key": "engine",
+                  "value": "1.8L",
+                  "type": "text"
+                },
+                {
+                  "key": "transmission",
+                  "value": "Automatic",
+                  "type": "text"
+                },
+                {
+                  "key": "color",
+                  "value": "White",
+                  "type": "text"
+                },
+                {
+                  "key": "distance",
+                  "value": "54000 km",
+                  "type": "text"
+                },
+                {
+                  "key": "imported",
+                  "value": "No",
+                  "type": "text"
+                },
+                {
+                  "key": "spray",
+                  "value": "Factory paint",
+                  "type": "text"
+                },
+                {
+                  "key": "status",
+                  "value": "Available",
+                  "type": "text"
+                },
+                {
+                  "key": "description",
+                  "value": "Single owner, excellent condition.",
+                  "type": "text"
+                },
+                {
+                  "key": "plateNumber",
+                  "value": "SHM-4521",
+                  "type": "text"
+                },
+                {
+                  "key": "notes",
+                  "value": "Inspection passed in April.",
+                  "type": "text"
+                },
+                {
+                  "key": "price",
+                  "value": "18250",
+                  "type": "text"
+                },
+                {
+                  "key": "possession",
+                  "value": "Ready",
+                  "type": "text"
+                },
+                {
+                  "key": "owner_name",
+                  "value": "Ahmad Khaled",
+                  "type": "text"
+                },
+                {
+                  "key": "owner_phone",
+                  "value": "0999123456",
+                  "type": "text"
+                },
+                {
+                  "key": "gallery_id",
+                  "value": "1",
+                  "type": "text"
+                },
+                {
+                  "key": "delete_image1",
+                  "value": "false",
+                  "type": "text"
+                },
+                {
+                  "key": "delete_image2",
+                  "value": "false",
+                  "type": "text"
+                },
+                {
+                  "key": "image_1",
+                  "type": "file",
+                  "src": [
+                    "/absolute/path/to/car1.jpg"
+                  ]
+                }
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"?? ????? ????? ?????\",\n  \"data\": {\n    \"id\": 1,\n    \"market_id\": 1,\n    \"model_id\": 1,\n    \"year\": \"2021\",\n    \"gasoline\": \"Gasoline\",\n    \"engine\": \"1.8L\",\n    \"transmission\": \"Automatic\",\n    \"color\": \"White\",\n    \"distance\": \"54000 km\",\n    \"imported\": \"No\",\n    \"spray\": \"Factory paint\",\n    \"status\": \"Available\",\n    \"description\": \"Single owner, excellent condition.\",\n    \"plateNumber\": \"SHM-4521\",\n    \"notes\": \"Inspection passed in April.\",\n    \"price\": 18250,\n    \"possession\": \"Ready\",\n    \"owner_name\": \"Ahmad Khaled\",\n    \"owner_phone\": \"0999123456\",\n    \"gallery_id\": 1,\n    \"image_1\": \"car1.jpg\",\n    \"image_2\": \"\",\n    \"image_3\": \"\",\n    \"image_4\": \"\",\n    \"image_5\": \"\",\n    \"image_6\": \"\",\n    \"car_sale_state\": 1\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Update Car Sale State",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/cars/{{car_id}}/sale-state",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "cars",
+                "{{car_id}}",
+                "sale-state"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sale_state\": 2,\n  \"edit_type\": \"manual\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"?? ????? ????? ?????\",\n  \"data\": null\n}"
+            }
+          ]
+        },
+        {
+          "name": "Delete Car",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/cars/{{car_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "cars",
+                "{{car_id}}"
+              ]
+            },
+            "description": ""
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"?? ????? ????? ?????\",\n  \"data\": {\n    \"id\": 1\n  }\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Orders",
+      "item": [
+        {
+          "name": "List Orders",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/orders",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "orders"
+              ]
+            },
+            "description": ""
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"?? ????? ????? ?????\",\n  \"data\": [\n    {\n      \"id\": 1,\n      \"client_name\": \"Yousef Ali\",\n      \"client_phone\": \"0999888777\",\n      \"car_market\": \"Toyota\",\n      \"car_model\": \"Corolla\",\n      \"year\": \"2021\",\n      \"price_low\": 17000,\n      \"price_high\": 19000,\n      \"order_state\": \"new\",\n      \"order_notes\": \"Prefers white color.\",\n      \"user_name\": \"admin\",\n      \"gallery_name\": \"Al Noor Gallery\"\n    }\n  ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "Create Order",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/orders",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "orders"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"client_name\": \"Yousef Ali\",\n  \"client_phone\": \"0999888777\",\n  \"car_market\": \"Toyota\",\n  \"car_model\": \"Corolla\",\n  \"year\": \"2021\",\n  \"price_low\": 17000,\n  \"price_high\": 19000,\n  \"order_state\": \"new\",\n  \"order_notes\": \"Prefers white color.\",\n  \"user_name\": \"admin\",\n  \"gallery_name\": \"Al Noor Gallery\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"?? ????? ????? ?????\",\n  \"data\": {\n    \"id\": 1,\n    \"client_name\": \"Yousef Ali\",\n    \"client_phone\": \"0999888777\",\n    \"car_market\": \"Toyota\",\n    \"car_model\": \"Corolla\",\n    \"year\": \"2021\",\n    \"price_low\": 17000,\n    \"price_high\": 19000,\n    \"order_state\": \"new\",\n    \"order_notes\": \"Prefers white color.\",\n    \"user_name\": \"admin\",\n    \"gallery_name\": \"Al Noor Gallery\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Show Order",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/orders/{{order_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "orders",
+                "{{order_id}}"
+              ]
+            },
+            "description": ""
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"?? ????? ????? ?????\",\n  \"data\": {\n    \"id\": 1,\n    \"client_name\": \"Yousef Ali\",\n    \"client_phone\": \"0999888777\",\n    \"car_market\": \"Toyota\",\n    \"car_model\": \"Corolla\",\n    \"year\": \"2021\",\n    \"price_low\": 17000,\n    \"price_high\": 19000,\n    \"order_state\": \"new\",\n    \"order_notes\": \"Prefers white color.\",\n    \"user_name\": \"admin\",\n    \"gallery_name\": \"Al Noor Gallery\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Update Order",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/orders/{{order_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "orders",
+                "{{order_id}}"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"client_name\": \"Yousef Ali\",\n  \"client_phone\": \"0999888777\",\n  \"car_market\": \"Toyota\",\n  \"car_model\": \"Corolla\",\n  \"year\": \"2021\",\n  \"price_low\": 17000,\n  \"price_high\": 19000,\n  \"order_state\": \"new\",\n  \"order_notes\": \"Prefers white color.\",\n  \"user_name\": \"admin\",\n  \"gallery_name\": \"Al Noor Gallery\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"?? ????? ????? ?????\",\n  \"data\": {\n    \"id\": 1,\n    \"client_name\": \"Yousef Ali\",\n    \"client_phone\": \"0999888777\",\n    \"car_market\": \"Toyota\",\n    \"car_model\": \"Corolla\",\n    \"year\": \"2021\",\n    \"price_low\": 17000,\n    \"price_high\": 19000,\n    \"order_state\": \"new\",\n    \"order_notes\": \"Prefers white color.\",\n    \"user_name\": \"admin\",\n    \"gallery_name\": \"Al Noor Gallery\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Delete Order",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/orders/{{order_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "orders",
+                "{{order_id}}"
+              ]
+            },
+            "description": ""
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"?? ????? ????? ?????\",\n  \"data\": null\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Sales",
+      "description": "Legacy frontend aliases: getSales, addSale, updateSale, completeSale, approveSaleOrder, deleteSaleOrder. The Laravel routes use bearer auth, GET query parameters for list endpoints, and route params for sale IDs.",
+      "item": [
+        {
+          "name": "List Sales",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/sales?status=hold&gallery_id={{gallery_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "sales"
+              ],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "hold",
+                  "description": "Required. Use hold or done."
+                },
+                {
+                  "key": "gallery_id",
+                  "value": "{{gallery_id}}",
+                  "description": "Optional for admin, recommended for gallery users."
+                }
+              ]
+            },
+            "description": "Frontend note: `getSales` used to POST the status in the body. The Laravel route is GET with query params."
+          },
+          "response": [
+            {
+              "name": "200 OK - Hold Sales",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"تم تنفيذ الطلب بنجاح\",\n  \"data\": [\n    {\n      \"id\": 101,\n      \"user_comiss\": 250,\n      \"user_note\": \"Pending buyer confirmation\",\n      \"buyer_name\": \"\",\n      \"buyer_phone\": \"\",\n      \"owner_comiss\": 500,\n      \"owner_comiss_payed\": 0,\n      \"buyer_comiss\": 0,\n      \"buyer_comiss_payed\": 0,\n      \"owner_id_image\": \"owner-id-101.jpg\",\n      \"buyer_id_image\": \"\",\n      \"contract_image\": \"\",\n      \"date\": \"2026-05-28\",\n      \"week_id\": 22,\n      \"car_brand\": \"Toyota\",\n      \"car_model\": \"Corolla\",\n      \"car_name\": \"Toyota Corolla 2021\",\n      \"user_id\": 1,\n      \"car_id\": 1,\n      \"car_number\": \"SHM-4521\",\n      \"price\": 18250,\n      \"employee_name\": \"Yousef Ali\",\n      \"owner_name\": \"Ahmad Khaled\",\n      \"owner_phone\": \"0999123456\",\n      \"status\": \"hold\",\n      \"created_at\": \"2026-05-28 11:05:00\",\n      \"updated_at\": \"2026-05-28 11:05:00\",\n      \"approved\": \"0\"\n    }\n  ]\n}"
+            },
+            {
+              "name": "200 OK - Done Sales",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"تم تنفيذ الطلب بنجاح\",\n  \"data\": [\n    {\n      \"id\": 102,\n      \"user_comiss\": 300,\n      \"user_note\": \"Completed after buyer confirmation\",\n      \"buyer_name\": \"Omar Saleh\",\n      \"buyer_phone\": \"0944332211\",\n      \"owner_comiss\": 500,\n      \"owner_comiss_payed\": 0,\n      \"buyer_comiss\": 300,\n      \"buyer_comiss_payed\": 0,\n      \"owner_id_image\": \"owner-id-102.jpg\",\n      \"buyer_id_image\": \"buyer-id-102.jpg\",\n      \"contract_image\": \"contract-102.jpg\",\n      \"date\": \"2026-05-28\",\n      \"week_id\": 22,\n      \"car_brand\": \"Toyota\",\n      \"car_model\": \"Corolla\",\n      \"car_name\": \"Toyota Corolla 2021\",\n      \"user_id\": 1,\n      \"car_id\": 1,\n      \"car_number\": \"SHM-4521\",\n      \"price\": 18250,\n      \"employee_name\": \"Yousef Ali\",\n      \"owner_name\": \"Ahmad Khaled\",\n      \"owner_phone\": \"0999123456\",\n      \"status\": \"done\",\n      \"created_at\": \"2026-05-27 15:18:00\",\n      \"updated_at\": \"2026-05-27 16:05:00\",\n      \"approved\": \"1\"\n    }\n  ]\n}"
+            },
+            {
+              "name": "403 Forbidden",
+              "originalRequest": {},
+              "status": "Forbidden",
+              "code": 403,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"status\": \"failure\",\n  \"message\": \"لا تملك صلاحية تنفيذ هذا الإجراء\",\n  \"data\": \"your computer harmly damaged\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Create Sale",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/sales",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "sales"
+              ]
+            },
+            "description": "Frontend note: `addSale` used to send files and fields together. Use multipart/form-data when uploading `owner_id_image`, `buyer_id_image`, or `contract_image`.",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "car_id",
+                  "value": "1",
+                  "type": "text"
+                },
+                {
+                  "key": "car_brand",
+                  "value": "Toyota",
+                  "type": "text"
+                },
+                {
+                  "key": "car_model",
+                  "value": "Corolla",
+                  "type": "text"
+                },
+                {
+                  "key": "car_number",
+                  "value": "SHM-4521",
+                  "type": "text"
+                },
+                {
+                  "key": "car_name",
+                  "value": "Toyota Corolla 2021",
+                  "type": "text"
+                },
+                {
+                  "key": "price",
+                  "value": "18250",
+                  "type": "text"
+                },
+                {
+                  "key": "employee_name",
+                  "value": "Yousef Ali",
+                  "type": "text"
+                },
+                {
+                  "key": "user_comiss",
+                  "value": "250",
+                  "type": "text"
+                },
+                {
+                  "key": "user_note",
+                  "value": "Pending buyer confirmation",
+                  "type": "text"
+                },
+                {
+                  "key": "owner_name",
+                  "value": "Ahmad Khaled",
+                  "type": "text"
+                },
+                {
+                  "key": "owner_phone",
+                  "value": "0999123456",
+                  "type": "text"
+                },
+                {
+                  "key": "owner_comiss",
+                  "value": "500",
+                  "type": "text"
+                },
+                {
+                  "key": "owner_comiss_payed",
+                  "value": "0",
+                  "type": "text"
+                },
+                {
+                  "key": "buyer_name",
+                  "value": "",
+                  "type": "text"
+                },
+                {
+                  "key": "buyer_phone",
+                  "value": "0",
+                  "type": "text"
+                },
+                {
+                  "key": "buyer_comiss",
+                  "value": "0",
+                  "type": "text"
+                },
+                {
+                  "key": "buyer_comiss_payed",
+                  "value": "0",
+                  "type": "text"
+                },
+                {
+                  "key": "date",
+                  "value": "2026-05-28",
+                  "type": "text"
+                },
+                {
+                  "key": "user_id",
+                  "value": "1",
+                  "type": "text"
+                },
+                {
+                  "key": "owner_id_image",
+                  "type": "file",
+                  "src": [
+                    "/absolute/path/to/owner-id.jpg"
+                  ]
+                },
+                {
+                  "key": "buyer_id_image",
+                  "type": "file",
+                  "src": [
+                    "/absolute/path/to/buyer-id.jpg"
+                  ]
+                },
+                {
+                  "key": "contract_image",
+                  "type": "file",
+                  "src": [
+                    "/absolute/path/to/contract.jpg"
+                  ]
+                }
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "200 OK - Created",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"تم إضافة عملية البيع بنجاح\",\n  \"data\": {\n    \"id\": 103,\n    \"user_comiss\": 250,\n    \"user_note\": \"Pending buyer confirmation\",\n    \"buyer_name\": \"\",\n    \"buyer_phone\": \"\",\n    \"owner_comiss\": 500,\n    \"owner_comiss_payed\": 0,\n    \"buyer_comiss\": 0,\n    \"buyer_comiss_payed\": 0,\n    \"owner_id_image\": \"d1f3a9c8b7e2.jpg\",\n    \"buyer_id_image\": \"\",\n    \"contract_image\": \"\",\n    \"date\": \"2026-05-28\",\n    \"week_id\": 22,\n    \"car_brand\": \"Toyota\",\n    \"car_model\": \"Corolla\",\n    \"car_name\": \"Toyota Corolla 2021\",\n    \"user_id\": 1,\n    \"car_id\": 1,\n    \"car_number\": \"SHM-4521\",\n    \"price\": 18250,\n    \"employee_name\": \"Yousef Ali\",\n    \"owner_name\": \"Ahmad Khaled\",\n    \"owner_phone\": \"0999123456\",\n    \"status\": \"hold\",\n    \"created_at\": \"2026-05-28 11:05:00\",\n    \"updated_at\": \"2026-05-28 11:05:00\",\n    \"approved\": \"0\"\n  }\n}"
+            },
+            {
+              "name": "422 Validation Error",
+              "originalRequest": {},
+              "status": "Unprocessable Entity",
+              "code": 422,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"message\": \"The given data was invalid.\",\n  \"errors\": {\n    \"car_id\": [\n      \"The car id field is required.\"\n    ],\n    \"car_name\": [\n      \"The car name field is required.\"\n    ],\n    \"price\": [\n      \"The price field is required.\"\n    ],\n    \"date\": [\n      \"The date field is required.\"\n    ],\n    \"user_id\": [\n      \"The user id field is required.\"\n    ]\n  }\n}"
+            },
+            {
+              "name": "403 Forbidden",
+              "originalRequest": {},
+              "status": "Forbidden",
+              "code": 403,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"status\": \"failure\",\n  \"message\": \"لا تملك صلاحية تنفيذ هذا الإجراء\",\n  \"data\": \"your computer harmly damaged\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Show Sale",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/sales/{{sale_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "sales",
+                "{{sale_id}}"
+              ]
+            },
+            "description": "Returns a single sale resource using the route parameter."
+          },
+          "response": [
+            {
+              "name": "200 OK - Success",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"تم تنفيذ الطلب بنجاح\",\n  \"data\": {\n    \"id\": 101,\n    \"user_comiss\": 250,\n    \"user_note\": \"Pending buyer confirmation\",\n    \"buyer_name\": \"\",\n    \"buyer_phone\": \"\",\n    \"owner_comiss\": 500,\n    \"owner_comiss_payed\": 0,\n    \"buyer_comiss\": 0,\n    \"buyer_comiss_payed\": 0,\n    \"owner_id_image\": \"owner-id-101.jpg\",\n    \"buyer_id_image\": \"\",\n    \"contract_image\": \"\",\n    \"date\": \"2026-05-28\",\n    \"week_id\": 22,\n    \"car_brand\": \"Toyota\",\n    \"car_model\": \"Corolla\",\n    \"car_name\": \"Toyota Corolla 2021\",\n    \"user_id\": 1,\n    \"car_id\": 1,\n    \"car_number\": \"SHM-4521\",\n    \"price\": 18250,\n    \"employee_name\": \"Yousef Ali\",\n    \"owner_name\": \"Ahmad Khaled\",\n    \"owner_phone\": \"0999123456\",\n    \"status\": \"hold\",\n    \"created_at\": \"2026-05-28 11:05:00\",\n    \"updated_at\": \"2026-05-28 11:05:00\",\n    \"approved\": \"0\"\n  }\n}"
+            },
+            {
+              "name": "403 Forbidden",
+              "originalRequest": {},
+              "status": "Forbidden",
+              "code": 403,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"status\": \"failure\",\n  \"message\": \"لا تملك صلاحية تنفيذ هذا الإجراء\",\n  \"data\": \"your computer harmly damaged\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Update Sale",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/sales/{{sale_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "sales",
+                "{{sale_id}}"
+              ]
+            },
+            "description": "Frontend note: `updateSale` used to send `id` in the body. The new Laravel route uses `/sales/{sale}` so the path param is authoritative.",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "car_id",
+                  "value": "1",
+                  "type": "text"
+                },
+                {
+                  "key": "car_brand",
+                  "value": "Toyota",
+                  "type": "text"
+                },
+                {
+                  "key": "car_model",
+                  "value": "Corolla",
+                  "type": "text"
+                },
+                {
+                  "key": "car_number",
+                  "value": "SHM-4521",
+                  "type": "text"
+                },
+                {
+                  "key": "car_name",
+                  "value": "Toyota Corolla 2021",
+                  "type": "text"
+                },
+                {
+                  "key": "price",
+                  "value": "18250",
+                  "type": "text"
+                },
+                {
+                  "key": "employee_name",
+                  "value": "Yousef Ali",
+                  "type": "text"
+                },
+                {
+                  "key": "user_comiss",
+                  "value": "250",
+                  "type": "text"
+                },
+                {
+                  "key": "user_note",
+                  "value": "Buyer confirmed after final inspection",
+                  "type": "text"
+                },
+                {
+                  "key": "owner_name",
+                  "value": "Ahmad Khaled",
+                  "type": "text"
+                },
+                {
+                  "key": "owner_phone",
+                  "value": "0999123456",
+                  "type": "text"
+                },
+                {
+                  "key": "owner_comiss",
+                  "value": "500",
+                  "type": "text"
+                },
+                {
+                  "key": "owner_comiss_payed",
+                  "value": "0",
+                  "type": "text"
+                },
+                {
+                  "key": "buyer_name",
+                  "value": "Omar Saleh",
+                  "type": "text"
+                },
+                {
+                  "key": "buyer_phone",
+                  "value": "0944332211",
+                  "type": "text"
+                },
+                {
+                  "key": "buyer_comiss",
+                  "value": "300",
+                  "type": "text"
+                },
+                {
+                  "key": "buyer_comiss_payed",
+                  "value": "0",
+                  "type": "text"
+                },
+                {
+                  "key": "date",
+                  "value": "2026-05-28",
+                  "type": "text"
+                },
+                {
+                  "key": "user_id",
+                  "value": "1",
+                  "type": "text"
+                },
+                {
+                  "key": "owner_id_image",
+                  "type": "file",
+                  "src": [
+                    "/absolute/path/to/owner-id.jpg"
+                  ]
+                },
+                {
+                  "key": "buyer_id_image",
+                  "type": "file",
+                  "src": [
+                    "/absolute/path/to/buyer-id.jpg"
+                  ]
+                },
+                {
+                  "key": "contract_image",
+                  "type": "file",
+                  "src": [
+                    "/absolute/path/to/contract.jpg"
+                  ]
+                }
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "200 OK - Updated",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"تم تحديث عملية البيع بنجاح\",\n  \"data\": {\n    \"id\": 103,\n    \"user_comiss\": 300,\n    \"user_note\": \"Buyer confirmed after final inspection\",\n    \"buyer_name\": \"Omar Saleh\",\n    \"buyer_phone\": \"0944332211\",\n    \"owner_comiss\": 500,\n    \"owner_comiss_payed\": 0,\n    \"buyer_comiss\": 300,\n    \"buyer_comiss_payed\": 0,\n    \"owner_id_image\": \"d1f3a9c8b7e2.jpg\",\n    \"buyer_id_image\": \"a5c1e9b4d2f0.jpg\",\n    \"contract_image\": \"b7c6d5e4f3a2.jpg\",\n    \"date\": \"2026-05-28\",\n    \"week_id\": 22,\n    \"car_brand\": \"Toyota\",\n    \"car_model\": \"Corolla\",\n    \"car_name\": \"Toyota Corolla 2021\",\n    \"user_id\": 1,\n    \"car_id\": 1,\n    \"car_number\": \"SHM-4521\",\n    \"price\": 18250,\n    \"employee_name\": \"Yousef Ali\",\n    \"owner_name\": \"Ahmad Khaled\",\n    \"owner_phone\": \"0999123456\",\n    \"status\": \"done\",\n    \"created_at\": \"2026-05-27 15:18:00\",\n    \"updated_at\": \"2026-05-27 16:05:00\",\n    \"approved\": \"0\"\n  }\n}"
+            },
+            {
+              "name": "422 Validation Error",
+              "originalRequest": {},
+              "status": "Unprocessable Entity",
+              "code": 422,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"message\": \"The given data was invalid.\",\n  \"errors\": {\n    \"car_id\": [\n      \"The car id field is required.\"\n    ],\n    \"car_name\": [\n      \"The car name field is required.\"\n    ],\n    \"price\": [\n      \"The price field is required.\"\n    ],\n    \"date\": [\n      \"The date field is required.\"\n    ],\n    \"user_id\": [\n      \"The user id field is required.\"\n    ]\n  }\n}"
+            },
+            {
+              "name": "403 Forbidden",
+              "originalRequest": {},
+              "status": "Forbidden",
+              "code": 403,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"status\": \"failure\",\n  \"message\": \"لا تملك صلاحية تنفيذ هذا الإجراء\",\n  \"data\": \"your computer harmly damaged\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Complete Sale",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/sales/{{sale_id}}/complete",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "sales",
+                "{{sale_id}}",
+                "complete"
+              ]
+            },
+            "description": "Frontend note: `completeSale` used to send `id` in the body. The Laravel route uses `/sales/{sale}/complete`.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"user_comiss\": 250,\n  \"owner_comiss\": 500,\n  \"owner_comiss_payed\": 500,\n  \"buyer_comiss\": 300,\n  \"buyer_comiss_payed\": 0,\n  \"employee_name\": \"Yousef Ali\",\n  \"user_note\": \"Customer confirmed the transaction\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [
+            {
+              "name": "200 OK - Completed",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"تم إكمال عملية البيع\",\n  \"data\": {\n    \"id\": 103,\n    \"user_comiss\": 250,\n    \"user_note\": \"Customer confirmed the transaction\",\n    \"buyer_name\": \"Omar Saleh\",\n    \"buyer_phone\": \"0944332211\",\n    \"owner_comiss\": 500,\n    \"owner_comiss_payed\": 500,\n    \"buyer_comiss\": 300,\n    \"buyer_comiss_payed\": 0,\n    \"owner_id_image\": \"owner-id-102.jpg\",\n    \"buyer_id_image\": \"buyer-id-102.jpg\",\n    \"contract_image\": \"contract-102.jpg\",\n    \"date\": \"2026-05-28\",\n    \"week_id\": 22,\n    \"car_brand\": \"Toyota\",\n    \"car_model\": \"Corolla\",\n    \"car_name\": \"Toyota Corolla 2021\",\n    \"user_id\": 1,\n    \"car_id\": 1,\n    \"car_number\": \"SHM-4521\",\n    \"price\": 18250,\n    \"employee_name\": \"Yousef Ali\",\n    \"owner_name\": \"Ahmad Khaled\",\n    \"owner_phone\": \"0999123456\",\n    \"status\": \"done\",\n    \"created_at\": \"2026-05-27 15:18:00\",\n    \"updated_at\": \"2026-05-27 16:05:00\",\n    \"approved\": \"1\"\n  }\n}"
+            },
+            {
+              "name": "422 Validation Error",
+              "originalRequest": {},
+              "status": "Unprocessable Entity",
+              "code": 422,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"message\": \"The given data was invalid.\",\n  \"errors\": {\n    \"user_comiss\": [\n      \"The user comiss field must be an integer.\"\n    ],\n    \"buyer_comiss\": [\n      \"The buyer comiss field must be an integer.\"\n    ]\n  }\n}"
+            },
+            {
+              "name": "403 Forbidden",
+              "originalRequest": {},
+              "status": "Forbidden",
+              "code": 403,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"status\": \"failure\",\n  \"message\": \"لا تملك صلاحية تنفيذ هذا الإجراء\",\n  \"data\": \"your computer harmly damaged\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Approve Sale Order",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/sales/{{sale_id}}/approve-order",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "sales",
+                "{{sale_id}}",
+                "approve-order"
+              ]
+            },
+            "description": "Frontend note: `approveSaleOrder` used to post the sale id in the body. The Laravel route uses the sale id in the URL and only needs ownerName and ownerPhone in the body.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"ownerName\": \"Ahmad Khaled\",\n  \"ownerPhone\": \"0999123456\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [
+            {
+              "name": "200 OK - Approved",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"تم تنفيذ الطلب بنجاح\",\n  \"data\": {\n    \"id\": 103,\n    \"user_comiss\": 250,\n    \"user_note\": \"Pending buyer confirmation\",\n    \"buyer_name\": \"\",\n    \"buyer_phone\": \"\",\n    \"owner_comiss\": 500,\n    \"owner_comiss_payed\": 0,\n    \"buyer_comiss\": 0,\n    \"buyer_comiss_payed\": 0,\n    \"owner_id_image\": \"owner-id-101.jpg\",\n    \"buyer_id_image\": \"\",\n    \"contract_image\": \"\",\n    \"date\": \"2026-05-28\",\n    \"week_id\": 22,\n    \"car_brand\": \"Toyota\",\n    \"car_model\": \"Corolla\",\n    \"car_name\": \"Toyota Corolla 2021\",\n    \"user_id\": 1,\n    \"car_id\": 1,\n    \"car_number\": \"SHM-4521\",\n    \"price\": 18250,\n    \"employee_name\": \"Yousef Ali\",\n    \"owner_name\": \"Ahmad Khaled\",\n    \"owner_phone\": \"0999123456\",\n    \"status\": \"hold\",\n    \"created_at\": \"2026-05-28 11:05:00\",\n    \"updated_at\": \"2026-05-28 11:05:00\",\n    \"approved\": \"1\"\n  }\n}"
+            },
+            {
+              "name": "422 Validation Error",
+              "originalRequest": {},
+              "status": "Unprocessable Entity",
+              "code": 422,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"message\": \"The given data was invalid.\",\n  \"errors\": {\n    \"ownerName\": [\n      \"The owner name field is required.\"\n    ],\n    \"ownerPhone\": [\n      \"The owner phone field is required.\"\n    ]\n  }\n}"
+            },
+            {
+              "name": "403 Forbidden",
+              "originalRequest": {},
+              "status": "Forbidden",
+              "code": 403,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"status\": \"failure\",\n  \"message\": \"لا تملك صلاحية تنفيذ هذا الإجراء\",\n  \"data\": \"your computer harmly damaged\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Delete Sale Order",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/sale-orders/{{sale_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "sale-orders",
+                "{{sale_id}}"
+              ]
+            },
+            "description": "Frontend note: `deleteSaleOrder` used to send the id in the body. The Laravel route deletes using `/sale-orders/{sale}`."
+          },
+          "response": [
+            {
+              "name": "200 OK - Deleted",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"تم تنفيذ الطلب بنجاح\",\n  \"data\": {\n    \"id\": 103,\n    \"user_comiss\": 250,\n    \"user_note\": \"Pending buyer confirmation\",\n    \"buyer_name\": \"\",\n    \"buyer_phone\": \"\",\n    \"owner_comiss\": 500,\n    \"owner_comiss_payed\": 0,\n    \"buyer_comiss\": 0,\n    \"buyer_comiss_payed\": 0,\n    \"owner_id_image\": \"owner-id-101.jpg\",\n    \"buyer_id_image\": \"\",\n    \"contract_image\": \"\",\n    \"date\": \"2026-05-28\",\n    \"week_id\": 22,\n    \"car_brand\": \"Toyota\",\n    \"car_model\": \"Corolla\",\n    \"car_name\": \"Toyota Corolla 2021\",\n    \"user_id\": 1,\n    \"car_id\": 1,\n    \"car_number\": \"SHM-4521\",\n    \"price\": 18250,\n    \"employee_name\": \"Yousef Ali\",\n    \"owner_name\": \"Ahmad Khaled\",\n    \"owner_phone\": \"0999123456\",\n    \"status\": \"hold\",\n    \"created_at\": \"2026-05-28 11:05:00\",\n    \"updated_at\": \"2026-05-28 11:05:00\",\n    \"approved\": \"0\"\n  }\n}"
+            },
+            {
+              "name": "403 Forbidden",
+              "originalRequest": {},
+              "status": "Forbidden",
+              "code": 403,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"status\": \"failure\",\n  \"message\": \"لا تملك صلاحية تنفيذ هذا الإجراء\",\n  \"data\": \"your computer harmly damaged\"\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Weeks",
+      "description": "Legacy frontend alias: getWeeks. The Laravel route is GET /weeks and requires a bearer token.",
+      "item": [
+        {
+          "name": "List Weeks",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/weeks",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "weeks"
+              ]
+            },
+            "description": "Returns the available week records ordered from newest to oldest."
+          },
+          "response": [
+            {
+              "name": "200 OK - Success",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"تم تنفيذ الطلب بنجاح\",\n  \"data\": [\n    {\n      \"id\": 22,\n      \"week_num\": 22,\n      \"year\": \"2026\",\n      \"start_date\": \"2026-05-22\",\n      \"end_date\": \"2026-05-28\"\n    },\n    {\n      \"id\": 21,\n      \"week_num\": 21,\n      \"year\": \"2026\",\n      \"start_date\": \"2026-05-15\",\n      \"end_date\": \"2026-05-21\"\n    }\n  ]\n}"
+            },
+            {
+              "name": "403 Forbidden",
+              "originalRequest": {},
+              "status": "Forbidden",
+              "code": 403,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"status\": \"failure\",\n  \"message\": \"لا تملك صلاحية تنفيذ هذا الإجراء\",\n  \"data\": \"your computer harmly damaged\"\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Accounts",
+      "description": "Legacy frontend aliases: getWeeklyAccounts, updateAccountReceived, addBonus, editBonus, deleteBonus, addDeduction, editDeduction, deleteDeduction. The Laravel routes use bearer auth and route params for the primary IDs.",
+      "item": [
+        {
+          "name": "Weekly Accounts",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/accounts/weekly?week={{week_num}}&year={{year}}&gallery_id={{gallery_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "accounts",
+                "weekly"
+              ],
+              "query": [
+                {
+                  "key": "week",
+                  "value": "{{week_num}}"
+                },
+                {
+                  "key": "year",
+                  "value": "{{year}}"
+                },
+                {
+                  "key": "gallery_id",
+                  "value": "{{gallery_id}}"
+                }
+              ]
+            },
+            "description": "Frontend note: `getWeeklyAccounts` used to POST the filters. The Laravel route is GET with query params."
+          },
+          "response": [
+            {
+              "name": "200 OK - Success",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"تم تنفيذ الطلب بنجاح\",\n  \"data\": [\n    {\n      \"id\": 301,\n      \"user_id\": 2,\n      \"user_name\": \"sales1\",\n      \"user_position\": \"4\",\n      \"user_gallery\": \"Al Noor Gallery\",\n      \"sales_count\": 4,\n      \"sales_amount\": 750,\n      \"deduction_amount\": 150,\n      \"working_days_count\": 6,\n      \"salary\": 1300,\n      \"week_id\": 22,\n      \"year\": \"2026\",\n      \"total_amount\": 1900,\n      \"received\": \"0\"\n    },\n    {\n      \"id\": 302,\n      \"user_id\": 3,\n      \"user_name\": \"sales2\",\n      \"user_position\": \"4\",\n      \"user_gallery\": \"Al Noor Gallery\",\n      \"sales_count\": 2,\n      \"sales_amount\": 420,\n      \"deduction_amount\": 0,\n      \"working_days_count\": 5,\n      \"salary\": 1200,\n      \"week_id\": 22,\n      \"year\": \"2026\",\n      \"total_amount\": 1620,\n      \"received\": \"1\"\n    }\n  ]\n}"
+            },
+            {
+              "name": "400 Week Not Found",
+              "originalRequest": {},
+              "status": "Bad Request",
+              "code": 400,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"status\": \"failure\",\n  \"message\": \"الأسبوع غير موجود\",\n  \"data\": null\n}"
+            },
+            {
+              "name": "403 Forbidden",
+              "originalRequest": {},
+              "status": "Forbidden",
+              "code": 403,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"status\": \"failure\",\n  \"message\": \"لا تملك صلاحية تنفيذ هذا الإجراء\",\n  \"data\": \"your computer harmly damaged\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Show Account",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/accounts/{{account_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "accounts",
+                "{{account_id}}"
+              ]
+            },
+            "description": "Returns a single account resource using the route parameter."
+          },
+          "response": [
+            {
+              "name": "200 OK - Success",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"تم تنفيذ الطلب بنجاح\",\n  \"data\": {\n    \"id\": 301,\n    \"user_id\": 2,\n    \"user_name\": \"sales1\",\n    \"user_position\": \"4\",\n    \"user_gallery\": \"Al Noor Gallery\",\n    \"sales_count\": 4,\n    \"sales_amount\": 750,\n    \"deduction_amount\": 150,\n    \"working_days_count\": 6,\n    \"salary\": 1300,\n    \"week_id\": 22,\n    \"year\": \"2026\",\n    \"total_amount\": 1900,\n    \"received\": \"0\"\n  }\n}"
+            },
+            {
+              "name": "403 Forbidden",
+              "originalRequest": {},
+              "status": "Forbidden",
+              "code": 403,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"status\": \"failure\",\n  \"message\": \"لا تملك صلاحية تنفيذ هذا الإجراء\",\n  \"data\": \"your computer harmly damaged\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Update Account",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/accounts/{{account_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "accounts",
+                "{{account_id}}"
+              ]
+            },
+            "description": "Updates the account deduction amount for the selected weekly account.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"deduction_amount\": 150\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"تم تنفيذ الطلب بنجاح\",\n  \"data\": null\n}"
+            },
+            {
+              "name": "400 Update Failed",
+              "originalRequest": {},
+              "status": "Bad Request",
+              "code": 400,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"status\": \"failure\",\n  \"message\": \"فشل تحديث الحساب\",\n  \"data\": null\n}"
+            },
+            {
+              "name": "403 Forbidden",
+              "originalRequest": {},
+              "status": "Forbidden",
+              "code": 403,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"status\": \"failure\",\n  \"message\": \"لا تملك صلاحية تنفيذ هذا الإجراء\",\n  \"data\": \"your computer harmly damaged\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Account Details",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/accounts/{{account_id}}/details",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "accounts",
+                "{{account_id}}",
+                "details"
+              ]
+            },
+            "description": "Returns the merged bonuses and deductions for the selected account. Each item includes a `type` field (`bonus` or `deduction`)."
+          },
+          "response": [
+            {
+              "name": "200 OK - Success",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"تم تنفيذ الطلب بنجاح\",\n  \"data\": [\n    {\n      \"id\": 55,\n      \"amount\": 150,\n      \"description\": \"Fuel adjustment\",\n      \"accountant_id\": 301,\n      \"type\": \"deduction\"\n    },\n    {\n      \"id\": 44,\n      \"amount\": 300,\n      \"description\": \"Monthly bonus\",\n      \"accountant_id\": 301,\n      \"type\": \"bonus\"\n    }\n  ]\n}"
+            },
+            {
+              "name": "403 Forbidden",
+              "originalRequest": {},
+              "status": "Forbidden",
+              "code": 403,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"status\": \"failure\",\n  \"message\": \"لا تملك صلاحية تنفيذ هذا الإجراء\",\n  \"data\": \"Unauthorized\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Update Account Received",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/accounts/{{account_id}}/received",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "accounts",
+                "{{account_id}}",
+                "received"
+              ]
+            },
+            "description": "Frontend note: the Laravel route uses the account id in the URL, but it still accepts legacy `user_id` and `week_id` body fields if the frontend is still mapping by legacy identifiers.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"received\": \"1\",\n  \"user_id\": 2,\n  \"week_id\": 22\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"تم تنفيذ الطلب بنجاح\",\n  \"data\": null\n}"
+            },
+            {
+              "name": "400 Update Failed",
+              "originalRequest": {},
+              "status": "Bad Request",
+              "code": 400,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"status\": \"failure\",\n  \"message\": \"فشل تحديث حالة الاستلام\",\n  \"data\": null\n}"
+            },
+            {
+              "name": "403 Forbidden",
+              "originalRequest": {},
+              "status": "Forbidden",
+              "code": 403,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"status\": \"failure\",\n  \"message\": \"لا تملك صلاحية تنفيذ هذا الإجراء\",\n  \"data\": \"Unauthorized\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Create Bonus",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/accounts/{{account_id}}/bonuses",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "accounts",
+                "{{account_id}}",
+                "bonuses"
+              ]
+            },
+            "description": "Frontend note: `addBonus` used to send `accountant_id` in the body. The Laravel route uses the account id in the URL; the body field is still accepted as legacy compatibility.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 300,\n  \"description\": \"Monthly bonus\",\n  \"accountant_id\": 301\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [
+            {
+              "name": "200 OK - Created",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"تم إضافة المكافأة بنجاح\",\n  \"data\": {\n    \"id\": 44,\n    \"amount\": 300,\n    \"description\": \"Monthly bonus\",\n    \"accountant_id\": 301\n  }\n}"
+            },
+            {
+              "name": "422 Validation Error",
+              "originalRequest": {},
+              "status": "Unprocessable Entity",
+              "code": 422,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"message\": \"The given data was invalid.\",\n  \"errors\": {\n    \"amount\": [\n      \"The amount field is required.\"\n    ],\n    \"description\": [\n      \"The description field is required.\"\n    ]\n  }\n}"
+            },
+            {
+              "name": "403 Forbidden",
+              "originalRequest": {},
+              "status": "Forbidden",
+              "code": 403,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"status\": \"failure\",\n  \"message\": \"Unauthorized access\",\n  \"data\": null\n}"
+            }
+          ]
+        },
+        {
+          "name": "Update Bonus",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/bonuses/{{bonus_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "bonuses",
+                "{{bonus_id}}"
+              ]
+            },
+            "description": "Frontend note: `editBonus` used to post an `id` in the body. The Laravel route uses `/bonuses/{bonus}` and only needs amount/description.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 350,\n  \"description\": \"Updated monthly bonus\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [
+            {
+              "name": "200 OK - Updated",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"تم تحديث المكافأة بنجاح\",\n  \"data\": {\n    \"id\": 44,\n    \"amount\": 350,\n    \"description\": \"Updated monthly bonus\",\n    \"accountant_id\": 301\n  }\n}"
+            },
+            {
+              "name": "422 Validation Error",
+              "originalRequest": {},
+              "status": "Unprocessable Entity",
+              "code": 422,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"message\": \"The given data was invalid.\",\n  \"errors\": {\n    \"amount\": [\n      \"The amount field is required.\"\n    ],\n    \"description\": [\n      \"The description field is required.\"\n    ]\n  }\n}"
+            },
+            {
+              "name": "403 Forbidden",
+              "originalRequest": {},
+              "status": "Forbidden",
+              "code": 403,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"status\": \"failure\",\n  \"message\": \"Unauthorized access\",\n  \"data\": null\n}"
+            }
+          ]
+        },
+        {
+          "name": "Delete Bonus",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/bonuses/{{bonus_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "bonuses",
+                "{{bonus_id}}"
+              ]
+            },
+            "description": "Frontend note: `deleteBonus` used to post the id in the body. The Laravel route deletes the record directly from `/bonuses/{bonus}`."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"تم حذف المكافأة بنجاح\",\n  \"data\": null\n}"
+            },
+            {
+              "name": "403 Forbidden",
+              "originalRequest": {},
+              "status": "Forbidden",
+              "code": 403,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"status\": \"failure\",\n  \"message\": \"Unauthorized access\",\n  \"data\": null\n}"
+            }
+          ]
+        },
+        {
+          "name": "Create Deduction",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/accounts/{{account_id}}/deductions",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "accounts",
+                "{{account_id}}",
+                "deductions"
+              ]
+            },
+            "description": "Frontend note: `addDeduction` used to send `accountant_id` in the body. The Laravel route uses the account id in the URL; the body field is still accepted as legacy compatibility.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 150,\n  \"description\": \"Fuel adjustment\",\n  \"accountant_id\": 301\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [
+            {
+              "name": "200 OK - Created",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"تم إضافة الحسم بنجاح\",\n  \"data\": {\n    \"id\": 55,\n    \"amount\": 150,\n    \"description\": \"Fuel adjustment\",\n    \"accountant_id\": 301\n  }\n}"
+            },
+            {
+              "name": "422 Validation Error",
+              "originalRequest": {},
+              "status": "Unprocessable Entity",
+              "code": 422,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"message\": \"The given data was invalid.\",\n  \"errors\": {\n    \"amount\": [\n      \"The amount field is required.\"\n    ],\n    \"description\": [\n      \"The description field is required.\"\n    ]\n  }\n}"
+            },
+            {
+              "name": "403 Forbidden",
+              "originalRequest": {},
+              "status": "Forbidden",
+              "code": 403,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"status\": \"failure\",\n  \"message\": \"Unauthorized access\",\n  \"data\": null\n}"
+            }
+          ]
+        },
+        {
+          "name": "Update Deduction",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/deductions/{{deduction_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "deductions",
+                "{{deduction_id}}"
+              ]
+            },
+            "description": "Frontend note: `editDeduction` used to post an `id` in the body. The Laravel route uses `/deductions/{deduction}` and only needs amount/description.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 175,\n  \"description\": \"Updated fuel adjustment\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [
+            {
+              "name": "200 OK - Updated",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"تم تحديث الحسم بنجاح\",\n  \"data\": {\n    \"id\": 55,\n    \"amount\": 175,\n    \"description\": \"Updated fuel adjustment\",\n    \"accountant_id\": 301\n  }\n}"
+            },
+            {
+              "name": "422 Validation Error",
+              "originalRequest": {},
+              "status": "Unprocessable Entity",
+              "code": 422,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"message\": \"The given data was invalid.\",\n  \"errors\": {\n    \"amount\": [\n      \"The amount field is required.\"\n    ],\n    \"description\": [\n      \"The description field is required.\"\n    ]\n  }\n}"
+            },
+            {
+              "name": "403 Forbidden",
+              "originalRequest": {},
+              "status": "Forbidden",
+              "code": 403,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"status\": \"failure\",\n  \"message\": \"Unauthorized access\",\n  \"data\": null\n}"
+            }
+          ]
+        },
+        {
+          "name": "Delete Deduction",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/deductions/{{deduction_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "deductions",
+                "{{deduction_id}}"
+              ]
+            },
+            "description": "Frontend note: `deleteDeduction` used to post the id in the body. The Laravel route deletes the record directly from `/deductions/{deduction}`."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"تم حذف الحسم بنجاح\",\n  \"data\": null\n}"
+            },
+            {
+              "name": "403 Forbidden",
+              "originalRequest": {},
+              "status": "Forbidden",
+              "code": 403,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"status\": \"failure\",\n  \"message\": \"Unauthorized access\",\n  \"data\": null\n}"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
