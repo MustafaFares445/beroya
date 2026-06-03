@@ -1,0 +1,28 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::create('galleries_phones', function (Blueprint $table): void {
+            $table->increments('id');
+            $table->string('phone', 20);
+            $table->unsignedInteger('gallery_id');
+
+            $table->foreign('gallery_id')
+                ->references('id')
+                ->on('galleries')
+                ->cascadeOnDelete()
+                ->cascadeOnUpdate();
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::dropIfExists('galleries_phones');
+    }
+};
