@@ -23,6 +23,8 @@ class StoreUserRequest extends FormRequest
             'user_name' => ['required', 'string', 'max:255'],
             'password' => ['required', 'string'],
             'gallery_id' => ['required', 'integer'],
+            'real_estate_office_id' => ['nullable', 'integer', 'exists:real_estate_offices,id'],
+            'real_estate_role' => ['nullable', 'string', 'max:255'],
             'permetions_level' => ['required', 'integer'],
             'salary' => ['required', 'integer'],
             'phone' => ['required', 'string', 'max:20'],

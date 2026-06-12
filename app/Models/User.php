@@ -24,6 +24,8 @@ class User extends Authenticatable
         'user_name',
         'password',
         'gallery_id',
+        'real_estate_office_id',
+        'real_estate_role',
         'permetions_level',
         'salary',
         'phone',
@@ -61,6 +63,11 @@ class User extends Authenticatable
     public function gallery(): BelongsTo
     {
         return $this->belongsTo(Gallery::class, 'gallery_id');
+    }
+
+    public function realEstateOffice(): BelongsTo
+    {
+        return $this->belongsTo(RealEstateOffice::class, 'real_estate_office_id');
     }
 
     public function accounts(): HasMany

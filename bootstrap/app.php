@@ -1,6 +1,8 @@
 <?php
 
 use App\Support\ApiResponse;
+use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Auth\AuthenticationException;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -19,12 +21,12 @@ return Application::configure(basePath: dirname(__DIR__))
         //
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        $exceptions->shouldRenderJsonWhen(function (Request $request, \Throwable $exception): bool {
+        $exceptions->shouldRenderJsonWhen(function (Request $request, Throwable $exception): bool {
             return $request->is('api/*') || $request->expectsJson();
         });
 
         $exceptions->render(function (ValidationException $exception, Request $request) {
-            if (!$request->is('api/*') && !$request->expectsJson()) {
+            if (! $request->is('api/*') && ! $request->expectsJson()) {
                 return null;
             }
 
@@ -33,8 +35,24 @@ return Application::configure(basePath: dirname(__DIR__))
             ], $exception->status, 'responses.validation_failed');
         });
 
+        $exceptions->render(function (AuthenticationException $exception, Request $request) {
+            if (! $request->is('api/*') && ! $request->expectsJson()) {
+                return null;
+            }
+
+            return ApiResponse::failureMessage('responses.auth.token_invalid', 401);
+        });
+
+        $exceptions->render(function (AuthorizationException $exception, Request $request) {
+            if (! $request->is('api/*') && ! $request->expectsJson()) {
+                return null;
+            }
+
+            return ApiResponse::failureMessage('responses.forbidden', 403);
+        });
+
         $exceptions->render(function (HttpExceptionInterface $exception, Request $request) {
-            if (!$request->is('api/*') && !$request->expectsJson()) {
+            if (! $request->is('api/*') && ! $request->expectsJson()) {
                 return null;
             }
 
@@ -48,8 +66,8 @@ return Application::configure(basePath: dirname(__DIR__))
             return ApiResponse::failureMessage($messageKey, $exception->getStatusCode());
         });
 
-        $exceptions->render(function (\Throwable $exception, Request $request) {
-            if (!$request->is('api/*') && !$request->expectsJson()) {
+        $exceptions->render(function (Throwable $exception, Request $request) {
+            if (! $request->is('api/*') && ! $request->expectsJson()) {
                 return null;
             }
 

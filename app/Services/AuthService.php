@@ -10,9 +10,7 @@ use Illuminate\Support\Facades\RateLimiter;
 
 class AuthService
 {
-    public function __construct(private readonly AccountService $accountService)
-    {
-    }
+    public function __construct(private readonly AccountService $accountService) {}
 
     /**
      * @param  array<string, mixed>  $credentials
@@ -75,7 +73,7 @@ class AuthService
 
         return [
             'success' => true,
-            'user' => $user->fresh(),
+            'user' => $user->loadMissing('realEstateOffice.province'),
             'token' => $accessToken->plainTextToken,
             'token_expiry' => $tokenExpiry,
         ];

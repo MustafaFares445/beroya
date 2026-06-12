@@ -9,25 +9,27 @@ use Illuminate\Support\Facades\Hash;
 
 class UserService
 {
-    public function __construct(private readonly AccountService $accountService)
-    {
-    }
+    public function __construct(private readonly AccountService $accountService) {}
 
     /**
      * @param  array<string, mixed>  $payload
      */
     public function store(array $payload): User
     {
-        return DB::transaction(static function () use ($payload): User {
-            return User::query()->create([
+        return DB::transaction(function () use ($payload): User {
+            $user = User::query()->create([
                 'user_name' => (string) $payload['user_name'],
                 'password' => Hash::make((string) $payload['password']),
                 'gallery_id' => (int) $payload['gallery_id'],
+                'real_estate_office_id' => $this->nullableInteger($payload, 'real_estate_office_id'),
+                'real_estate_role' => $this->nullableString($payload, 'real_estate_role'),
                 'permetions_level' => (int) $payload['permetions_level'],
                 'salary' => (int) $payload['salary'],
                 'phone' => (string) $payload['phone'],
                 'is_active' => true,
             ]);
+
+            return $user->fresh(['realEstateOffice.province']) ?? $user;
         });
     }
 
@@ -37,23 +39,30 @@ class UserService
     public function update(User $user, array $payload): User
     {
         return DB::transaction(function () use ($user, $payload): User {
-            $data = [
+            $user->fill([
                 'user_name' => (string) $payload['user_name'],
                 'gallery_id' => (int) $payload['gallery_id'],
                 'permetions_level' => (int) $payload['permetions_level'],
                 'salary' => (int) $payload['salary'],
                 'phone' => (string) $payload['phone'],
-            ];
+            ]);
 
-            if (isset($payload['password']) && (string) $payload['password'] !== '') {
-                $data['password'] = Hash::make((string) $payload['password']);
+            if (array_key_exists('password', $payload) && $payload['password'] !== null && $payload['password'] !== '') {
+                $user->password = Hash::make((string) $payload['password']);
             }
 
-            $user->update($data);
+            if (array_key_exists('real_estate_office_id', $payload)) {
+                $user->real_estate_office_id = $this->nullableInteger($payload, 'real_estate_office_id');
+            }
 
-            $this->accountService->recalculateUserAccounts($user->id);
+            if (array_key_exists('real_estate_role', $payload)) {
+                $user->real_estate_role = $this->nullableString($payload, 'real_estate_role');
+            }
 
-            return $user->fresh();
+            $user->save();
+            $this->accountService->recalculateUserAccounts((int) $user->id);
+
+            return $user->fresh(['realEstateOffice.province']) ?? $user;
         });
     }
 
@@ -72,5 +81,29 @@ class UserService
         $user->save();
 
         return true;
+    }
+
+    /**
+     * @param  array<string, mixed>  $payload
+     */
+    private function nullableInteger(array $payload, string $key): ?int
+    {
+        if (! array_key_exists($key, $payload) || $payload[$key] === null) {
+            return null;
+        }
+
+        return (int) $payload[$key];
+    }
+
+    /**
+     * @param  array<string, mixed>  $payload
+     */
+    private function nullableString(array $payload, string $key): ?string
+    {
+        if (! array_key_exists($key, $payload) || $payload[$key] === null) {
+            return null;
+        }
+
+        return (string) $payload[$key];
     }
 }

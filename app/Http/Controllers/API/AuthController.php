@@ -4,16 +4,17 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\LoginRequest;
+use App\Models\User;
 use App\Services\AuthService;
 use App\Support\ApiResponse;
+use App\Support\RealEstate;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 
 class AuthController extends Controller
 {
-    public function __construct(private readonly AuthService $authService)
-    {
-    }
+    public function __construct(private readonly AuthService $authService) {}
 
     public function login(LoginRequest $request): JsonResponse
     {
@@ -26,16 +27,24 @@ class AuthController extends Controller
             return ApiResponse::failureMessage($messageKey, $statusCode);
         }
 
-        /** @var \App\Models\User $user */
+        /** @var User $user */
         $user = $result['user'];
         $token = (string) $result['token'];
-        /** @var \Illuminate\Support\Carbon $tokenExpiry */
+        /** @var Carbon $tokenExpiry */
         $tokenExpiry = $result['token_expiry'];
+        $user->loadMissing('realEstateOffice.province');
+        $permissionLevel = $user->permetions_level !== null ? (int) $user->permetions_level : null;
 
         return ApiResponse::success([
             'id' => $user->id,
             'user_name' => $user->user_name,
             'gallery_id' => $user->gallery_id,
+            'real_estate_office_id' => $user->real_estate_office_id,
+            'real_estate_office_name' => $user->realEstateOffice?->name,
+            'real_estate_province_id' => $user->realEstateOffice?->province?->id,
+            'real_estate_province_name' => $user->realEstateOffice?->province?->name,
+            'real_estate_role' => $user->real_estate_role,
+            'real_estate_role_label' => RealEstate::roleLabel($user->real_estate_role, $permissionLevel),
             'permetions_level' => $user->permetions_level,
             'salary' => $user->salary,
             'phone' => $user->phone,

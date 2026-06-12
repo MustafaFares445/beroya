@@ -14,9 +14,7 @@ use Illuminate\Http\Request;
 
 class UserController extends Controller
 {
-    public function __construct(private readonly UserService $userService)
-    {
-    }
+    public function __construct(private readonly UserService $userService) {}
 
     public function index(Request $request): JsonResponse
     {
@@ -29,7 +27,7 @@ class UserController extends Controller
             return ApiResponse::failureData('your computer harmly damaged', 403, 'responses.forbidden');
         }
 
-        $usersQuery = User::query();
+        $usersQuery = User::query()->with('realEstateOffice.province');
         if ((int) $authenticatedUser->gallery_id !== 0) {
             $usersQuery->where('gallery_id', (int) $authenticatedUser->gallery_id);
         }
@@ -64,7 +62,7 @@ class UserController extends Controller
 
         $createdUser = $this->userService->store($payload);
 
-        return ApiResponse::success(UserResource::make($createdUser)->resolve());
+        return ApiResponse::success(UserResource::make($createdUser->loadMissing('realEstateOffice.province'))->resolve());
     }
 
     public function show(Request $request, User $user): JsonResponse
@@ -82,7 +80,7 @@ class UserController extends Controller
             return ApiResponse::failureData('your computer harmly damaged', 403, 'responses.forbidden');
         }
 
-        return ApiResponse::success(UserResource::make($user)->resolve());
+        return ApiResponse::success(UserResource::make($user->loadMissing('realEstateOffice.province'))->resolve());
     }
 
     public function update(UpdateUserRequest $request, User $user): JsonResponse
@@ -102,7 +100,7 @@ class UserController extends Controller
 
         $updatedUser = $this->userService->update($user, $request->validated());
 
-        return ApiResponse::success(UserResource::make($updatedUser)->resolve());
+        return ApiResponse::success(UserResource::make($updatedUser->loadMissing('realEstateOffice.province'))->resolve());
     }
 
     public function destroy(Request $request, User $user): JsonResponse

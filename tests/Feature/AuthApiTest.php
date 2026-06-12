@@ -40,6 +40,7 @@ class AuthApiTest extends TestCase
             ->assertOk()
             ->assertJsonPath('status', 'success')
             ->assertJsonPath('message', __('responses.success', [], 'ar'))
+            ->assertJsonPath('data.real_estate_role_label', 'مدير محافظة')
             ->assertJsonStructure([
                 'status',
                 'message',
@@ -47,6 +48,7 @@ class AuthApiTest extends TestCase
                     'id',
                     'user_name',
                     'gallery_id',
+                    'real_estate_role_label',
                     'permetions_level',
                     'salary',
                     'phone',
@@ -84,7 +86,8 @@ class AuthApiTest extends TestCase
             ->assertOk()
             ->assertJsonPath('status', 'success')
             ->assertJsonPath('message', __('responses.success', [], 'ar'))
-            ->assertJsonPath('data.user_name', 'admin');
+            ->assertJsonPath('data.user_name', 'admin')
+            ->assertJsonPath('data.real_estate_role_label', 'مدير محافظة');
 
         $this->assertNotEmpty($response->json('data.token'));
         $this->assertSame(1, PersonalAccessToken::query()->count());
