@@ -16,12 +16,21 @@ use App\Http\Controllers\API\GalleryController;
 use App\Http\Controllers\API\GalleryPhoneController;
 use App\Http\Controllers\API\MarketController;
 use App\Http\Controllers\API\OrderController;
+use App\Http\Controllers\API\PropertyCategoryController;
+use App\Http\Controllers\API\PropertyController;
+use App\Http\Controllers\API\PropertyImageController;
+use App\Http\Controllers\API\PropertySubcategoryController;
+use App\Http\Controllers\API\PropertySubmissionController;
+use App\Http\Controllers\API\ProvinceController;
+use App\Http\Controllers\API\RealEstateOfficeController;
+use App\Http\Controllers\API\RealEstateOfficePhoneController;
+use App\Http\Controllers\API\RealEstateOptionsController;
 use App\Http\Controllers\API\SaleController;
 use App\Http\Controllers\API\SaleOrderController;
 use App\Http\Controllers\API\UserController;
 use App\Http\Controllers\API\UserPasswordController;
-use App\Http\Controllers\API\WeeklyAccountController;
 use App\Http\Controllers\API\WeekController;
+use App\Http\Controllers\API\WeeklyAccountController;
 use Illuminate\Support\Facades\Route;
 
 Route::post('auth/login', [AuthController::class, 'login']);
@@ -37,6 +46,21 @@ Route::get('car-models', [CarModelController::class, 'index']);
 Route::get('car-models/{carModel}', [CarModelController::class, 'show']);
 Route::get('cars', [CarController::class, 'index']);
 Route::get('cars/{car}', [CarController::class, 'show']);
+Route::get('provinces', [ProvinceController::class, 'index']);
+Route::get('provinces/{province}', [ProvinceController::class, 'show']);
+Route::prefix('real-estate')->group(function (): void {
+    Route::get('options', RealEstateOptionsController::class);
+    Route::get('offices', [RealEstateOfficeController::class, 'index']);
+    Route::get('offices/{realEstateOffice}', [RealEstateOfficeController::class, 'show']);
+    Route::get('office-phones', [RealEstateOfficePhoneController::class, 'index']);
+    Route::get('office-phones/{realEstateOfficePhone}', [RealEstateOfficePhoneController::class, 'show']);
+    Route::get('property-categories', [PropertyCategoryController::class, 'index']);
+    Route::get('property-subcategories', [PropertySubcategoryController::class, 'index']);
+    Route::get('properties', [PropertyController::class, 'index']);
+    Route::get('properties/{property}', [PropertyController::class, 'show']);
+});
+
+Route::post('real-estate/property-submissions', [PropertySubmissionController::class, 'store']);
 
 Route::middleware('auth:sanctum')->group(function (): void {
     Route::post('auth/logout', [AuthController::class, 'logout']);
@@ -59,6 +83,31 @@ Route::middleware('auth:sanctum')->group(function (): void {
     Route::post('markets', [MarketController::class, 'store']);
     Route::put('markets/{market}', [MarketController::class, 'update']);
     Route::delete('markets/{market}', [MarketController::class, 'destroy']);
+
+    Route::post('provinces', [ProvinceController::class, 'store']);
+    Route::put('provinces/{province}', [ProvinceController::class, 'update']);
+    Route::delete('provinces/{province}', [ProvinceController::class, 'destroy']);
+
+    Route::prefix('real-estate')->group(function (): void {
+        Route::get('property-submissions', [PropertySubmissionController::class, 'index']);
+        Route::get('property-submissions/{submission}', [PropertySubmissionController::class, 'show']);
+        Route::put('property-submissions/{submission}/approve', [PropertySubmissionController::class, 'approve']);
+        Route::put('property-submissions/{submission}/reject', [PropertySubmissionController::class, 'reject']);
+
+        Route::post('offices', [RealEstateOfficeController::class, 'store']);
+        Route::put('offices/{realEstateOffice}', [RealEstateOfficeController::class, 'update']);
+        Route::delete('offices/{realEstateOffice}', [RealEstateOfficeController::class, 'destroy']);
+
+        Route::post('office-phones', [RealEstateOfficePhoneController::class, 'store']);
+        Route::put('office-phones/{realEstateOfficePhone}', [RealEstateOfficePhoneController::class, 'update']);
+        Route::delete('office-phones/{realEstateOfficePhone}', [RealEstateOfficePhoneController::class, 'destroy']);
+
+        Route::post('properties', [PropertyController::class, 'store']);
+        Route::put('properties/{property}', [PropertyController::class, 'update']);
+        Route::delete('properties/{property}', [PropertyController::class, 'destroy']);
+        Route::post('properties/{property}/images', [PropertyImageController::class, 'store']);
+        Route::delete('property-images/{image}', [PropertyImageController::class, 'destroy']);
+    });
 
     Route::post('car-models', [CarModelController::class, 'store']);
     Route::put('car-models/{carModel}', [CarModelController::class, 'update']);
