@@ -20,9 +20,13 @@ class SaleService
     /**
      * @return Collection<int, Sale>
      */
-    public function list(string $status, int $galleryId, User $legacyUser): Collection
+    public function list(string $status, int $galleryId, ?int $userId, User $legacyUser): Collection
     {
         $query = Sale::query()->where('status', $status);
+
+        if ($userId !== null) {
+            $query->where('user_id', $userId);
+        }
 
         if ($status === 'done') {
             return $query->get();

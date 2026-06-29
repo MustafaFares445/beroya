@@ -283,4 +283,36 @@ class SaleApiTest extends TestCase
 
         $this->assertDatabaseMissing('sales', ['id' => $sale->id]);
     }
+
+    public function test_hold_sales_are_filtered_by_user_id(): void
+    {
+        $context = $this->createSaleContext();
+        $this->actingAsSanctum($context['seller']);
+
+        $otherSeller = User::factory()->create([
+            'gallery_id' => $context['gallery']->id,
+            'permetions_level' => 4,
+        ]);
+
+        Sale::factory()->create([
+            'status' => 'hold',
+            'week_id' => $context['week']->id,
+            'user_id' => $context['seller']->id,
+            'date' => '2026-01-05',
+        ]);
+
+        Sale::factory()->create([
+            'status' => 'hold',
+            'week_id' => $context['week']->id,
+            'user_id' => $otherSeller->id,
+            'date' => '2026-01-05',
+        ]);
+
+        $response = $this->getJson('/api/sales?status=hold&user_id='.$otherSeller->id);
+
+        $response
+            ->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.user_id', $otherSeller->id);
+    }
 }

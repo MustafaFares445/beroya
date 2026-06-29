@@ -31,10 +31,12 @@ class SaleController extends Controller
 
         $validated = $request->validated();
         $galleryId = isset($validated['gallery_id']) ? (int) $validated['gallery_id'] : (int) $user->gallery_id;
+        $userId = isset($validated['user_id']) ? (int) $validated['user_id'] : null;
 
         $sales = $this->saleService->list(
             (string) $validated['status'],
             $galleryId,
+            $userId,
             $user,
         );
 

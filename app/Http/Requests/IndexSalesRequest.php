@@ -20,6 +20,7 @@ class IndexSalesRequest extends FormRequest
         return [
             'status' => ['required', 'string', 'max:50'],
             'gallery_id' => ['nullable', 'integer', 'min:0'],
+            'user_id' => ['nullable', 'integer', 'min:1'],
         ];
     }
 }
