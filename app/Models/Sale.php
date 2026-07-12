@@ -2,14 +2,22 @@
 
 namespace App\Models;
 
+use Database\Factories\SaleFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Sale extends Model
 {
-    /** @use HasFactory<\Database\Factories\SaleFactory> */
+    /** @use HasFactory<SaleFactory> */
     use HasFactory;
+
+    /**
+     * @var array<string, mixed>
+     */
+    protected $attributes = [
+        'contract_type' => 'cash',
+    ];
 
     /**
      * @var list<string>
@@ -40,12 +48,26 @@ class Sale extends Model
         'owner_phone',
         'status',
         'approved',
+        'contract_type',
+        'installment_count',
+        'installment_amount',
+        'installment_start_date',
+        'installment_end_date',
+        'installment_note',
+        'requested_at',
+        'approved_at',
+        'completed_at',
     ];
 
     protected function casts(): array
     {
         return [
             'date' => 'date',
+            'requested_at' => 'datetime',
+            'approved_at' => 'datetime',
+            'completed_at' => 'datetime',
+            'installment_start_date' => 'date',
+            'installment_end_date' => 'date',
             'created_at' => 'datetime',
             'updated_at' => 'datetime',
         ];

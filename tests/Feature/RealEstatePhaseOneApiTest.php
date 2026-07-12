@@ -116,7 +116,7 @@ class RealEstatePhaseOneApiTest extends TestCase
         $this->deleteJson("/api/provinces/{$provinceId}")
             ->assertOk()
             ->assertJsonPath('status', 'success')
-            ->assertJsonPath('data', null);
+            ->assertJsonPath('data.id', $provinceId);
 
         $this->assertDatabaseMissing('provinces', [
             'id' => $provinceId,
@@ -180,7 +180,8 @@ class RealEstatePhaseOneApiTest extends TestCase
 
         $this->deleteJson("/api/real-estate/offices/{$officeId}")
             ->assertOk()
-            ->assertJsonPath('status', 'success');
+            ->assertJsonPath('status', 'success')
+            ->assertJsonPath('data.id', $officeId);
 
         $this->assertDatabaseMissing('real_estate_offices', [
             'id' => $officeId,
@@ -240,7 +241,8 @@ class RealEstatePhaseOneApiTest extends TestCase
 
         $this->deleteJson("/api/real-estate/office-phones/{$phoneId}")
             ->assertOk()
-            ->assertJsonPath('status', 'success');
+            ->assertJsonPath('status', 'success')
+            ->assertJsonPath('data.id', $phoneId);
 
         $this->assertDatabaseMissing('real_estate_office_phones', [
             'id' => $phoneId,

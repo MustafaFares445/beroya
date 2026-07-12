@@ -8,16 +8,29 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('property_submissions', function (Blueprint $table): void {
-            $table->string('title_type', 100)->after('property_nature');
-            $table->text('submission_note')->nullable()->after('owner_phone');
-        });
+        if (Schema::hasTable('property_submissions')) {
+            Schema::table('property_submissions', function (Blueprint $table): void {
+                if (! Schema::hasColumn('property_submissions', 'title_type')) {
+                    $table->string('title_type', 100)->after('property_nature');
+                }
+
+                if (! Schema::hasColumn('property_submissions', 'submission_note')) {
+                    $table->text('submission_note')->nullable()->after('owner_phone');
+                }
+            });
+        }
     }
 
     public function down(): void
     {
-        Schema::table('property_submissions', function (Blueprint $table): void {
-            $table->dropColumn(['title_type', 'submission_note']);
-        });
+        if (Schema::hasTable('property_submissions')) {
+            Schema::table('property_submissions', function (Blueprint $table): void {
+                foreach (['title_type', 'submission_note'] as $column) {
+                    if (Schema::hasColumn('property_submissions', $column)) {
+                        $table->dropColumn($column);
+                    }
+                }
+            });
+        }
     }
 };

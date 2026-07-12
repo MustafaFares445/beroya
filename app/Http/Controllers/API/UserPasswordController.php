@@ -11,9 +11,7 @@ use Illuminate\Http\JsonResponse;
 
 class UserPasswordController extends Controller
 {
-    public function __construct(private readonly UserService $userService)
-    {
-    }
+    public function __construct(private readonly UserService $userService) {}
 
     public function __invoke(UpdateUserPasswordRequest $request, User $user): JsonResponse
     {
@@ -46,6 +44,8 @@ class UserPasswordController extends Controller
             return ApiResponse::failureData('Old password is incorrect', 422, 'responses.user.old_password_incorrect');
         }
 
-        return ApiResponse::success(null, 200, ['message' => 'responses.user.password_updated']);
+        return ApiResponse::success([
+            'id' => $user->id,
+        ], 200, ['message' => 'responses.user.password_updated']);
     }
 }

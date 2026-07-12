@@ -126,7 +126,11 @@ class AccountApiTest extends TestCase
         $response
             ->assertOk()
             ->assertJsonPath('status', 'success')
-            ->assertJsonCount(2, 'data');
+            ->assertJsonCount(2, 'data')
+            ->assertJsonPath('data.0.type', 'deduction')
+            ->assertJsonPath('data.0.amount', 50)
+            ->assertJsonPath('data.1.type', 'bonus')
+            ->assertJsonPath('data.1.amount', 100);
     }
 
     public function test_manager_can_update_received_status(): void
@@ -159,6 +163,81 @@ class AccountApiTest extends TestCase
         $this->assertDatabaseHas('accountants', [
             'id' => $account->id,
             'received' => '1',
+        ]);
+    }
+
+    public function test_manager_can_view_and_update_account(): void
+    {
+        $gallery = Gallery::query()->create([
+            'name' => 'Damascus',
+            'address' => 'Center',
+        ]);
+
+        $week = Week::factory()->create([
+            'week_num' => 2,
+            'year' => 2026,
+        ]);
+
+        $employee = User::factory()->create([
+            'gallery_id' => $gallery->id,
+            'salary' => 1000,
+        ]);
+
+        $account = Account::query()->create([
+            'user_id' => $employee->id,
+            'user_name' => $employee->user_name,
+            'user_position' => '4',
+            'user_gallery' => $gallery->name,
+            'sales_count' => 0,
+            'sales_amount' => 0,
+            'deduction_amount' => 0,
+            'working_days_count' => 0,
+            'salary' => 1000,
+            'week_id' => $week->id,
+            'year' => '2026',
+            'total_amount' => 1000,
+            'received' => '0',
+        ]);
+
+        $manager = User::factory()->create([
+            'gallery_id' => $gallery->id,
+            'permetions_level' => 2,
+        ]);
+
+        $this->actingAsSanctum($manager);
+
+        $showResponse = $this->getJson("/api/accounts/{$account->id}");
+
+        $showResponse
+            ->assertOk()
+            ->assertJsonPath('status', 'success')
+            ->assertJsonPath('data.id', $account->id)
+            ->assertJsonPath('data.user_name', $employee->user_name)
+            ->assertJsonPath('data.user_gallery', $gallery->name)
+            ->assertJsonPath('data.salary', 1000)
+            ->assertJsonPath('data.total_amount', 1000);
+
+        Deduction::factory()->create([
+            'accountant_id' => $account->id,
+            'amount' => 75,
+            'description' => 'Late arrival',
+        ]);
+
+        $updateResponse = $this->putJson("/api/accounts/{$account->id}", [
+            'deduction_amount' => 75,
+        ]);
+
+        $updateResponse
+            ->assertOk()
+            ->assertJsonPath('status', 'success')
+            ->assertJsonPath('data.id', $account->id)
+            ->assertJsonPath('data.deduction_amount', 75)
+            ->assertJsonPath('data.total_amount', 925);
+
+        $this->assertDatabaseHas('accountants', [
+            'id' => $account->id,
+            'deduction_amount' => 75,
+            'total_amount' => 925,
         ]);
     }
 

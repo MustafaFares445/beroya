@@ -15,9 +15,7 @@ use Illuminate\Http\Request;
 
 class GalleryPhoneController extends Controller
 {
-    public function __construct(private readonly GalleryPhoneService $galleryPhoneService)
-    {
-    }
+    public function __construct(private readonly GalleryPhoneService $galleryPhoneService) {}
 
     public function index(): JsonResponse
     {
@@ -28,7 +26,7 @@ class GalleryPhoneController extends Controller
 
     public function store(StoreGalleryPhoneRequest $request): JsonResponse
     {
-        if (!$this->canManagePhones($request)) {
+        if (! $this->canManagePhones($request)) {
             return ApiResponse::failureData('your computer harmly damaged', 403, 'responses.forbidden');
         }
 
@@ -44,7 +42,7 @@ class GalleryPhoneController extends Controller
 
     public function update(UpdateGalleryPhoneRequest $request, GalleryPhone $galleryPhone): JsonResponse
     {
-        if (!$this->canManagePhones($request)) {
+        if (! $this->canManagePhones($request)) {
             return ApiResponse::failureData('your computer harmly damaged', 403, 'responses.forbidden');
         }
 
@@ -55,13 +53,13 @@ class GalleryPhoneController extends Controller
 
     public function destroy(Request $request, GalleryPhone $galleryPhone): JsonResponse
     {
-        if (!$this->canManagePhones($request)) {
+        if (! $this->canManagePhones($request)) {
             return ApiResponse::failureData('your computer harmly damaged', 403, 'responses.forbidden');
         }
 
         $this->galleryPhoneService->delete($galleryPhone);
 
-        return ApiResponse::success();
+        return ApiResponse::success(['id' => $galleryPhone->id]);
     }
 
     private function canManagePhones(Request $request): bool
@@ -75,4 +73,3 @@ class GalleryPhoneController extends Controller
         return in_array((int) $user->permetions_level, [1, 2], true);
     }
 }
-

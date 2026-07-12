@@ -90,4 +90,70 @@ class UserApiTest extends TestCase
             ->assertJsonPath('status', 'failure')
             ->assertJsonPath('data', 'your computer harmly damaged');
     }
+
+    public function test_admin_can_delete_user(): void
+    {
+        $gallery = Gallery::query()->create([
+            'name' => 'Homs',
+            'address' => 'Center',
+        ]);
+
+        $admin = User::query()->create([
+            'user_name' => 'admin',
+            'password' => Hash::make('secret'),
+            'gallery_id' => 0,
+            'permetions_level' => 1,
+            'salary' => 0,
+            'phone' => '',
+        ]);
+
+        $user = User::factory()->create([
+            'gallery_id' => $gallery->id,
+        ]);
+
+        $this->actingAsSanctum($admin);
+
+        $response = $this->deleteJson("/api/users/{$user->id}");
+
+        $response
+            ->assertOk()
+            ->assertJsonPath('status', 'success')
+            ->assertJsonPath('message', __('responses.user.delete_success', [], 'ar'));
+
+        $this->assertNull($response->json('data'));
+        $this->assertDatabaseMissing('users', [
+            'id' => $user->id,
+        ]);
+    }
+
+    public function test_user_can_update_own_password(): void
+    {
+        $user = User::query()->create([
+            'user_name' => 'sales-user',
+            'password' => Hash::make('old-secret'),
+            'gallery_id' => 0,
+            'permetions_level' => 4,
+            'salary' => 0,
+            'phone' => '0999000001',
+        ]);
+
+        $this->actingAsSanctum($user);
+
+        $response = $this->putJson("/api/users/{$user->id}/password", [
+            'old_password' => 'old-secret',
+            'new_password' => 'new-secret',
+        ]);
+
+        $response
+            ->assertOk()
+            ->assertJsonPath('status', 'success')
+            ->assertJsonPath('message', __('responses.user.password_updated', [], 'ar'))
+            ->assertJsonPath('data.id', $user->id);
+
+        $freshUser = $user->fresh();
+
+        $this->assertNotNull($freshUser);
+        $this->assertTrue(Hash::check('new-secret', $freshUser->password));
+        $this->assertFalse(Hash::check('old-secret', $freshUser->password));
+    }
 }

@@ -13,9 +13,7 @@ use Illuminate\Http\JsonResponse;
 
 class ApproveSaleOrderController extends Controller
 {
-    public function __construct(private readonly SaleService $saleService)
-    {
-    }
+    public function __construct(private readonly SaleService $saleService) {}
 
     public function __invoke(ApproveSaleOrderRequest $request, Sale $sale): JsonResponse
     {
@@ -26,7 +24,12 @@ class ApproveSaleOrderController extends Controller
             return ApiResponse::failureData('your computer harmly damaged', 403, 'responses.forbidden');
         }
 
-        $updatedSale = $this->saleService->approveOrder($sale, $request->validated());
+        $updatedSale = $this->saleService->approveOrder(
+            $sale,
+            $request->validated(),
+            $user,
+            $request->ip(),
+        );
 
         return ApiResponse::success(SaleResource::make($updatedSale)->resolve());
     }

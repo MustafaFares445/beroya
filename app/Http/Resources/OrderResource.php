@@ -27,6 +27,13 @@ class OrderResource extends JsonResource
             'order_notes' => $this->order_notes,
             'user_name' => $this->user_name,
             'gallery_name' => $this->gallery_name,
+            'checked' => $this->checked,
+            'approved_at' => $this->approved_at?->format('Y-m-d H:i:s'),
+            'rejected_at' => $this->rejected_at?->format('Y-m-d H:i:s'),
+            'reviewed_by_user_id' => $this->reviewed_by_user_id,
+            'reject_reason' => $this->reject_reason,
+            'created_at' => $this->created_at?->format('Y-m-d H:i:s'),
+            'updated_at' => $this->updated_at?->format('Y-m-d H:i:s'),
         ];
     }
 }

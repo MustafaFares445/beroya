@@ -2,13 +2,13 @@
   "info": {
     "_postman_id": "f5b7da72-86f4-45a5-b9d8-00e5e9c74114",
     "name": "Beroya API - Route Complete Docs",
-    "description": "Current Laravel route contract with representative examples for the old Beroya frontend. Protected routes use Sanctum bearer tokens, sales and account folders map the legacy getSales/getWeeklyAccounts/changePassword flows to the new Laravel endpoints, and multipart examples are included for file uploads.",
+    "description": "Current Laravel route contract with representative examples for the Beroya frontend. The collection now targets https://beroya.mustafafares.com/api, protected routes use Sanctum bearer tokens, multipart examples are included for file uploads, and the detailed flow notes live in the three FRONTEND_PHASE_*.md guides.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
     {
       "key": "base_url",
-      "value": "http://localhost/api"
+      "value": "https://beroya.mustafafares.com/api"
     },
     {
       "key": "auth_token",
@@ -2300,7 +2300,7 @@
     },
     {
       "name": "Sales",
-      "description": "Legacy frontend aliases: getSales, addSale, updateSale, completeSale, approveSaleOrder, deleteSaleOrder. The Laravel routes use bearer auth, GET query parameters for list endpoints, and route params for sale IDs.",
+      "description": "Legacy frontend aliases: getSales, addSale, updateSale, completeSale, approveSaleOrder, deleteSaleOrder, updateInstallmentContract. The Laravel routes use bearer auth, GET query parameters for list endpoints, and route params for sale IDs.",
       "item": [
         {
           "name": "List Sales",
@@ -2813,6 +2813,84 @@
           ]
         },
         {
+          "name": "Update Installment Contract",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/sales/{{sale_id}}/installment-contract",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "sales",
+                "{{sale_id}}",
+                "installment-contract"
+              ]
+            },
+            "description": "Frontend note: `updateInstallmentContract` uses the sale id in the URL and only needs installment fields in the body.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"installment_count\": 24,\n  \"installment_amount\": 1000,\n  \"installment_start_date\": \"2026-02-01\",\n  \"installment_end_date\": \"2028-01-01\",\n  \"installment_note\": \"Monthly installments\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [
+            {
+              "name": "200 OK - Updated",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"?? ????? ????? ?????\",\n  \"data\": {\n    \"id\": 103,\n    \"user_comiss\": 250,\n    \"user_note\": \"Customer confirmed the transaction\",\n    \"buyer_name\": \"Omar Saleh\",\n    \"buyer_phone\": \"0944332211\",\n    \"owner_comiss\": 500,\n    \"owner_comiss_payed\": 500,\n    \"buyer_comiss\": 300,\n    \"buyer_comiss_payed\": 0,\n    \"owner_id_image\": \"owner-id-102.jpg\",\n    \"buyer_id_image\": \"buyer-id-102.jpg\",\n    \"contract_image\": \"contract-102.jpg\",\n    \"date\": \"2026-05-28\",\n    \"week_id\": 22,\n    \"car_brand\": \"Toyota\",\n    \"car_model\": \"Corolla\",\n    \"car_name\": \"Toyota Corolla 2021\",\n    \"user_id\": 1,\n    \"car_id\": 1,\n    \"car_number\": \"SHM-4521\",\n    \"price\": 18250,\n    \"employee_name\": \"Yousef Ali\",\n    \"owner_name\": \"Ahmad Khaled\",\n    \"owner_phone\": \"0999123456\",\n    \"status\": \"hold\",\n    \"requested_at\": \"2026-05-28 11:05:00\",\n    \"approved_at\": null,\n    \"completed_at\": null,\n    \"contract_type\": \"installment\",\n    \"installment_count\": 24,\n    \"installment_amount\": 1000,\n    \"installment_start_date\": \"2026-02-01\",\n    \"installment_end_date\": \"2028-01-01\",\n    \"installment_note\": \"Monthly installments\",\n    \"created_at\": \"2026-05-27 15:18:00\",\n    \"updated_at\": \"2026-05-27 16:05:00\",\n    \"approved\": \"0\"\n  }\n}"
+            },
+            {
+              "name": "422 Validation Error",
+              "originalRequest": {},
+              "status": "Unprocessable Entity",
+              "code": 422,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"message\": \"The given data was invalid.\",\n  \"errors\": {\n    \"installment_count\": [\n      \"The installment count field is required.\"\n    ],\n    \"installment_amount\": [\n      \"The installment amount field is required.\"\n    ],\n    \"installment_start_date\": [\n      \"The installment start date field is required.\"\n    ],\n    \"installment_end_date\": [\n      \"The installment end date field is required.\"\n    ]\n  }\n}"
+            },
+            {
+              "name": "403 Forbidden",
+              "originalRequest": {},
+              "status": "Forbidden",
+              "code": 403,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"status\": \"failure\",\n  \"message\": \"?? ???? ?????? ????? ??? ???????\",\n  \"data\": \"your computer harmly damaged\"\n}"
+            }
+          ]
+        },
+        {
           "name": "Complete Sale",
           "request": {
             "method": "PUT",
@@ -3019,6 +3097,223 @@
                 }
               ],
               "body": "{\n  \"status\": \"failure\",\n  \"message\": \"لا تملك صلاحية تنفيذ هذا الإجراء\",\n  \"data\": \"your computer harmly damaged\"\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Activity Logs",
+      "description": "Phase-3 audit trail for sales and car workflow actions. Bearer auth required and access is limited to manager-level users.",
+      "item": [
+        {
+          "name": "List Activity Logs",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/activity-logs?user_id={{user_id}}&gallery_id={{gallery_id}}&action_type=sale.created&target_type=Sale&target_id=101&date=2026-06-14",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "activity-logs"
+              ],
+              "query": [
+                {
+                  "key": "user_id",
+                  "value": "{{user_id}}",
+                  "description": "Optional actor user filter."
+                },
+                {
+                  "key": "gallery_id",
+                  "value": "{{gallery_id}}",
+                  "description": "Optional gallery filter."
+                },
+                {
+                  "key": "action_type",
+                  "value": "sale.created",
+                  "description": "Optional action type filter."
+                },
+                {
+                  "key": "target_type",
+                  "value": "Sale",
+                  "description": "Optional model type filter."
+                },
+                {
+                  "key": "target_id",
+                  "value": "101",
+                  "description": "Optional target ID filter."
+                },
+                {
+                  "key": "date",
+                  "value": "2026-06-14",
+                  "description": "Optional date filter in Y-m-d format."
+                }
+              ]
+            },
+            "description": "Frontend note: this is a read-only manager endpoint with optional query filters."
+          },
+          "response": [
+            {
+              "name": "200 OK - Success",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"?? ????? ????? ?????\",\n  \"data\": [\n    {\n      \"id\": 12,\n      \"actor_user_id\": 4,\n      \"actor_user_name\": \"Yousef Ali\",\n      \"gallery_id\": 2,\n      \"gallery_name\": \"Aleppo\",\n      \"action_type\": \"sale.created\",\n      \"target_type\": \"Sale\",\n      \"target_id\": 101,\n      \"old_values\": [],\n      \"new_values\": {\n        \"status\": \"hold\"\n      },\n      \"ip_address\": \"127.0.0.1\",\n      \"created_at\": \"2026-06-14 09:15:00\"\n    }\n  ]\n}"
+            },
+            {
+              "name": "403 Forbidden",
+              "originalRequest": {},
+              "status": "Forbidden",
+              "code": 403,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"status\": \"failure\",\n  \"message\": \"?? ???? ?????? ????? ??? ???????\",\n  \"data\": \"your computer harmly damaged\"\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Notifications",
+      "description": "Phase-3 notification inbox for order and sales workflow events. Bearer auth required.",
+      "item": [
+        {
+          "name": "List Notifications",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/notifications",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "notifications"
+              ]
+            },
+            "description": "Returns the current user notification inbox and unread count."
+          },
+          "response": [
+            {
+              "name": "200 OK - Success",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"?? ????? ????? ?????\",\n  \"data\": {\n    \"notifications\": [\n      {\n        \"id\": \"2f6f6f9c-6f2d-4e12-9d4a-0f04d7f9b8a1\",\n        \"type\": \"App\\\\Notifications\\\\WorkflowNotification\",\n        \"category\": \"sale\",\n        \"event\": \"created\",\n        \"title\": \"Pending sale created\",\n        \"body\": \"Sale #101 is waiting for approval.\",\n        \"entity_type\": \"Sale\",\n        \"entity_id\": 101,\n        \"meta\": {\n          \"status\": \"hold\",\n          \"contract_type\": \"cash\"\n        },\n        \"read_at\": null,\n        \"created_at\": \"2026-06-14 09:15:00\"\n      }\n    ],\n    \"unread_count\": 1\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Mark Notification Read",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/notifications/{{notification_id}}/read",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "notifications",
+                "{{notification_id}}",
+                "read"
+              ]
+            },
+            "description": "Marks one owned notification as read."
+          },
+          "response": [
+            {
+              "name": "200 OK - Success",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"?? ????? ????? ?????\",\n  \"data\": {\n    \"id\": \"2f6f6f9c-6f2d-4e12-9d4a-0f04d7f9b8a1\",\n    \"type\": \"App\\\\Notifications\\\\WorkflowNotification\",\n    \"category\": \"sale\",\n    \"event\": \"created\",\n    \"title\": \"Pending sale created\",\n    \"body\": \"Sale #101 is waiting for approval.\",\n    \"entity_type\": \"Sale\",\n    \"entity_id\": 101,\n    \"meta\": {\n      \"status\": \"hold\",\n      \"contract_type\": \"cash\"\n    },\n    \"read_at\": \"2026-06-14 09:20:00\",\n    \"created_at\": \"2026-06-14 09:15:00\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Delete Notification",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/notifications/{{notification_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "notifications",
+                "{{notification_id}}"
+              ]
+            },
+            "description": "Deletes one owned notification."
+          },
+          "response": [
+            {
+              "name": "200 OK - Success",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"?? ????? ????? ?????\",\n  \"data\": null\n}"
             }
           ]
         }

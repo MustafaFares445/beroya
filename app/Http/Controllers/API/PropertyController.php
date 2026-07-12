@@ -77,7 +77,7 @@ class PropertyController extends Controller
 
         $this->propertyService->delete($property);
 
-        return ApiResponse::success();
+        return ApiResponse::success(['id' => $property->id]);
     }
 
     /**

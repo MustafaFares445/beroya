@@ -230,4 +230,3 @@ Control: lock auth behavior in Phase 1 before module migration.
 ## 14) Reference Documents
 - `C:\laragon\www\beroya\BACKEND_FRONTEND_API_COMPATIBILITY_REPORT_2026-06-01.md`
 - `C:\laragon\www\beroya\FRONTEND_LARAVEL_API_MIGRATION_GUIDE.md`
-

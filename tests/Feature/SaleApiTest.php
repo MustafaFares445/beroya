@@ -125,6 +125,23 @@ class SaleApiTest extends TestCase
             ->assertJsonPath('status', 'success')
             ->assertJsonPath('data.status', 'hold')
             ->assertJsonPath('data.approved', '0');
+
+        $saleId = (int) $response->json('data.id');
+
+        $this->assertNotNull($response->json('data.requested_at'));
+        $this->assertDatabaseHas('activity_logs', [
+            'actor_user_id' => $context['seller']->id,
+            'action_type' => 'sale.created',
+            'target_type' => 'Sale',
+            'target_id' => $saleId,
+        ]);
+
+        $this->getJson("/api/sales/{$saleId}")
+            ->assertOk()
+            ->assertJsonPath('status', 'success')
+            ->assertJsonPath('data.id', $saleId)
+            ->assertJsonPath('data.status', 'hold')
+            ->assertJsonPath('data.requested_at', $response->json('data.requested_at'));
     }
 
     public function test_user_can_create_done_sale_when_buyer_commission_is_non_zero(): void
@@ -141,6 +158,59 @@ class SaleApiTest extends TestCase
             ->assertOk()
             ->assertJsonPath('data.status', 'done')
             ->assertJsonPath('data.approved', '1');
+
+        $this->assertNotNull($response->json('data.requested_at'));
+        $this->assertDatabaseHas('cars', [
+            'id' => $context['car']->id,
+            'car_sale_state' => 3,
+        ]);
+        $this->assertDatabaseHas('activity_logs', [
+            'actor_user_id' => $context['seller']->id,
+            'action_type' => 'sale.created',
+            'target_type' => 'Sale',
+            'target_id' => $response->json('data.id'),
+        ]);
+    }
+
+    public function test_user_can_update_hold_sale(): void
+    {
+        $context = $this->createSaleContext();
+        $this->actingAsSanctum($context['seller']);
+
+        $sale = Sale::query()->create([
+            ...$this->salePayload($context['car']->id, $context['seller']->id, '2026-01-05'),
+            'week_id' => $context['week']->id,
+            'owner_id_image' => '',
+            'buyer_id_image' => '',
+            'contract_image' => '',
+            'status' => 'hold',
+            'approved' => '0',
+            'requested_at' => '2026-01-05 09:00:00',
+            'approved_at' => null,
+            'completed_at' => null,
+        ]);
+
+        $payload = $this->salePayload($context['car']->id, $context['seller']->id, '2026-01-06');
+        $payload['user_note'] = 'Updated note';
+        $payload['price'] = 27000;
+
+        $response = $this->putJson("/api/sales/{$sale->id}", $payload);
+
+        $response
+            ->assertOk()
+            ->assertJsonPath('status', 'success')
+            ->assertJsonPath('data.id', $sale->id)
+            ->assertJsonPath('data.user_note', 'Updated note')
+            ->assertJsonPath('data.price', 27000)
+            ->assertJsonPath('data.status', 'hold')
+            ->assertJsonPath('data.requested_at', '2026-01-05 09:00:00');
+
+        $this->assertDatabaseHas('activity_logs', [
+            'actor_user_id' => $context['seller']->id,
+            'action_type' => 'sale.updated',
+            'target_type' => 'Sale',
+            'target_id' => $sale->id,
+        ]);
     }
 
     public function test_hold_sales_are_filtered_by_gallery(): void
@@ -177,6 +247,118 @@ class SaleApiTest extends TestCase
         $response
             ->assertOk()
             ->assertJsonCount(1, 'data');
+    }
+
+    public function test_hold_sales_are_filtered_by_user_id(): void
+    {
+        $context = $this->createSaleContext();
+        $this->actingAsSanctum($context['seller']);
+
+        $otherSeller = User::factory()->create([
+            'gallery_id' => $context['gallery']->id,
+            'permetions_level' => 4,
+        ]);
+
+        Sale::factory()->create([
+            'status' => 'hold',
+            'week_id' => $context['week']->id,
+            'user_id' => $context['seller']->id,
+            'date' => '2026-01-05',
+        ]);
+
+        Sale::factory()->create([
+            'status' => 'hold',
+            'week_id' => $context['week']->id,
+            'user_id' => $otherSeller->id,
+            'date' => '2026-01-05',
+        ]);
+
+        $response = $this->getJson('/api/sales?status=hold&user_id='.$otherSeller->id);
+
+        $response
+            ->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.user_id', $otherSeller->id);
+    }
+
+    public function test_hold_sales_are_sorted_by_requested_time_descending(): void
+    {
+        $context = $this->createSaleContext();
+        $this->actingAsSanctum($context['seller']);
+
+        Sale::query()->create([
+            ...$this->salePayload($context['car']->id, $context['seller']->id),
+            'week_id' => $context['week']->id,
+            'owner_id_image' => '',
+            'buyer_id_image' => '',
+            'contract_image' => '',
+            'status' => 'hold',
+            'approved' => '0',
+            'requested_at' => '2026-01-05 09:00:00',
+            'approved_at' => null,
+            'completed_at' => null,
+        ]);
+
+        $secondSale = Sale::query()->create([
+            ...$this->salePayload($context['car']->id, $context['seller']->id),
+            'week_id' => $context['week']->id,
+            'owner_id_image' => '',
+            'buyer_id_image' => '',
+            'contract_image' => '',
+            'status' => 'hold',
+            'approved' => '0',
+            'requested_at' => '2026-01-05 10:00:00',
+            'approved_at' => null,
+            'completed_at' => null,
+        ]);
+
+        $response = $this->getJson('/api/sales?status=hold&gallery_id='.$context['gallery']->id);
+
+        $response
+            ->assertOk()
+            ->assertJsonPath('data.0.id', $secondSale->id)
+            ->assertJsonPath('data.0.requested_at', '2026-01-05 10:00:00');
+    }
+
+    public function test_manager_can_approve_sale_order_and_store_approval_timestamp(): void
+    {
+        $context = $this->createSaleContext();
+
+        $manager = User::factory()->create([
+            'gallery_id' => $context['gallery']->id,
+            'permetions_level' => 2,
+        ]);
+
+        $sale = Sale::factory()->create([
+            'status' => 'hold',
+            'approved' => '0',
+            'week_id' => $context['week']->id,
+            'user_id' => $context['seller']->id,
+            'car_id' => $context['car']->id,
+            'date' => '2026-01-05',
+        ]);
+
+        $this->actingAsSanctum($manager);
+
+        $response = $this->putJson("/api/sales/{$sale->id}/approve-order", [
+            'ownerName' => 'Approved Owner',
+            'ownerPhone' => '0999111111',
+        ]);
+
+        $response
+            ->assertOk()
+            ->assertJsonPath('status', 'success')
+            ->assertJsonPath('data.approved', '1')
+            ->assertJsonPath('data.owner_name', 'Approved Owner')
+            ->assertJsonPath('data.owner_phone', '0999111111');
+
+        $this->assertNotNull($response->json('data.approved_at'));
+        $this->assertDatabaseHas('activity_logs', [
+            'actor_user_id' => $manager->id,
+            'action_type' => 'sale.approved',
+            'target_type' => 'Sale',
+            'target_id' => $sale->id,
+        ]);
     }
 
     public function test_manager_can_complete_sale_and_update_car_state(): void
@@ -221,9 +403,16 @@ class SaleApiTest extends TestCase
             ->assertOk()
             ->assertJsonPath('data.status', 'done');
 
+        $this->assertNotNull($response->json('data.completed_at'));
         $this->assertDatabaseHas('cars', [
             'id' => $context['car']->id,
             'car_sale_state' => 3,
+        ]);
+        $this->assertDatabaseHas('activity_logs', [
+            'actor_user_id' => $manager->id,
+            'action_type' => 'sale.completed',
+            'target_type' => 'Sale',
+            'target_id' => $sale->id,
         ]);
 
         $this->assertDatabaseHas('accountants', [
@@ -282,37 +471,64 @@ class SaleApiTest extends TestCase
             ->assertJsonPath('status', 'success');
 
         $this->assertDatabaseMissing('sales', ['id' => $sale->id]);
+        $this->assertDatabaseHas('activity_logs', [
+            'actor_user_id' => $manager->id,
+            'action_type' => 'sale.deleted',
+            'target_type' => 'Sale',
+            'target_id' => $sale->id,
+        ]);
+        $this->assertDatabaseHas('activity_logs', [
+            'actor_user_id' => $manager->id,
+            'action_type' => 'car.sale_state_updated',
+            'target_type' => 'Car',
+            'target_id' => $context['car']->id,
+        ]);
     }
 
-    public function test_hold_sales_are_filtered_by_user_id(): void
+    public function test_manager_can_update_sale_installment_contract(): void
     {
         $context = $this->createSaleContext();
-        $this->actingAsSanctum($context['seller']);
 
-        $otherSeller = User::factory()->create([
+        $manager = User::factory()->create([
             'gallery_id' => $context['gallery']->id,
-            'permetions_level' => 4,
+            'permetions_level' => 2,
         ]);
 
-        Sale::factory()->create([
+        $sale = Sale::factory()->create([
             'status' => 'hold',
+            'approved' => '0',
+            'contract_type' => 'cash',
             'week_id' => $context['week']->id,
             'user_id' => $context['seller']->id,
+            'car_id' => $context['car']->id,
             'date' => '2026-01-05',
         ]);
 
-        Sale::factory()->create([
-            'status' => 'hold',
-            'week_id' => $context['week']->id,
-            'user_id' => $otherSeller->id,
-            'date' => '2026-01-05',
-        ]);
+        $this->actingAsSanctum($manager);
 
-        $response = $this->getJson('/api/sales?status=hold&user_id='.$otherSeller->id);
+        $response = $this->putJson("/api/sales/{$sale->id}/installment-contract", [
+            'installment_count' => 24,
+            'installment_amount' => 1000,
+            'installment_start_date' => '2026-02-01',
+            'installment_end_date' => '2028-01-01',
+            'installment_note' => 'Monthly installments',
+        ]);
 
         $response
             ->assertOk()
-            ->assertJsonCount(1, 'data')
-            ->assertJsonPath('data.0.user_id', $otherSeller->id);
+            ->assertJsonPath('status', 'success')
+            ->assertJsonPath('data.contract_type', 'installment')
+            ->assertJsonPath('data.installment_count', 24)
+            ->assertJsonPath('data.installment_amount', 1000)
+            ->assertJsonPath('data.installment_start_date', '2026-02-01')
+            ->assertJsonPath('data.installment_end_date', '2028-01-01')
+            ->assertJsonPath('data.installment_note', 'Monthly installments');
+
+        $this->assertDatabaseHas('activity_logs', [
+            'actor_user_id' => $manager->id,
+            'action_type' => 'sale.installment_contract.updated',
+            'target_type' => 'Sale',
+            'target_id' => $sale->id,
+        ]);
     }
 }

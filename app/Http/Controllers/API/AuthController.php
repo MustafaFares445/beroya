@@ -63,7 +63,9 @@ class AuthController extends Controller
 
         $this->authService->logout($user);
 
-        return ApiResponse::success(null, 200, [
+        return ApiResponse::success([
+            'id' => $user->id,
+        ], 200, [
             'message' => 'responses.auth.logout_success',
         ]);
     }

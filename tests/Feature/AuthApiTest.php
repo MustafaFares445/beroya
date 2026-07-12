@@ -107,7 +107,7 @@ class AuthApiTest extends TestCase
             ->assertOk()
             ->assertJsonPath('status', 'success')
             ->assertJsonPath('message', __('responses.auth.logout_success', [], 'ar'))
-            ->assertJsonPath('data', null);
+            ->assertJsonPath('data.id', $user->id);
 
         $this->assertNull(PersonalAccessToken::findToken($token));
     }

@@ -16,9 +16,7 @@ use Illuminate\Http\Request;
 
 class SaleController extends Controller
 {
-    public function __construct(private readonly SaleService $saleService)
-    {
-    }
+    public function __construct(private readonly SaleService $saleService) {}
 
     public function index(IndexSalesRequest $request): JsonResponse
     {
@@ -52,7 +50,11 @@ class SaleController extends Controller
             return ApiResponse::failureData('your computer harmly damaged', 403, 'responses.forbidden');
         }
 
-        $sale = $this->saleService->store($request->validated());
+        $sale = $this->saleService->store(
+            $request->validated(),
+            $user,
+            $request->ip(),
+        );
 
         return ApiResponse::success(
             SaleResource::make($sale)->resolve(),
@@ -82,7 +84,12 @@ class SaleController extends Controller
             return ApiResponse::failureData('your computer harmly damaged', 403, 'responses.forbidden');
         }
 
-        $updatedSale = $this->saleService->update($sale, $request->validated());
+        $updatedSale = $this->saleService->update(
+            $sale,
+            $request->validated(),
+            $user,
+            $request->ip(),
+        );
 
         return ApiResponse::success(
             SaleResource::make($updatedSale)->resolve(),

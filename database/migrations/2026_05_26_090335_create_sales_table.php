@@ -13,7 +13,7 @@ return new class extends Migration
             $table->integer('user_comiss');
             $table->text('user_note');
             $table->string('buyer_name', 30);
-            $table->integer('buyer_phone');
+            $table->string('buyer_phone')->default('0');
             $table->integer('owner_comiss')->nullable();
             $table->integer('owner_comiss_payed');
             $table->integer('buyer_comiss');

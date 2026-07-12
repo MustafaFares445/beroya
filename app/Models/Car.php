@@ -2,16 +2,15 @@
 
 namespace App\Models;
 
+use Database\Factories\CarFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Car extends Model
 {
-    /** @use HasFactory<\Database\Factories\CarFactory> */
+    /** @use HasFactory<CarFactory> */
     use HasFactory;
-
-    public $timestamps = false;
 
     /**
      * @var list<string>
@@ -44,6 +43,15 @@ class Car extends Model
         'image_6',
         'car_sale_state',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'car_sale_state' => 'integer',
+            'created_at' => 'datetime',
+            'updated_at' => 'datetime',
+        ];
+    }
 
     public function market(): BelongsTo
     {

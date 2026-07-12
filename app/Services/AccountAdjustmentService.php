@@ -13,9 +13,7 @@ use Illuminate\Support\Facades\DB;
 
 class AccountAdjustmentService
 {
-    public function __construct(private readonly AccountService $accountService)
-    {
-    }
+    public function __construct(private readonly AccountService $accountService) {}
 
     /**
      * @return Collection<int, Account>
@@ -65,6 +63,7 @@ class AccountAdjustmentService
         $deductions = Deduction::query()
             ->where('accountant_id', $account->id)
             ->get()
+            ->toBase()
             ->map(static fn (Deduction $deduction): array => [
                 'id' => $deduction->id,
                 'amount' => $deduction->amount,
@@ -76,6 +75,7 @@ class AccountAdjustmentService
         $bonuses = Bonus::query()
             ->where('accountant_id', $account->id)
             ->get()
+            ->toBase()
             ->map(static fn (Bonus $bonus): array => [
                 'id' => $bonus->id,
                 'amount' => $bonus->amount,
@@ -84,7 +84,9 @@ class AccountAdjustmentService
                 'type' => 'bonus',
             ]);
 
-        return $deductions->merge($bonuses)->values();
+        return $deductions
+            ->merge($bonuses)
+            ->values();
     }
 
     /**

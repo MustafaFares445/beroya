@@ -14,9 +14,7 @@ use Illuminate\Http\Request;
 
 class AccountController extends Controller
 {
-    public function __construct(private readonly AccountAdjustmentService $accountAdjustmentService)
-    {
-    }
+    public function __construct(private readonly AccountAdjustmentService $accountAdjustmentService) {}
 
     public function show(Request $request, Account $account): JsonResponse
     {
@@ -45,7 +43,7 @@ class AccountController extends Controller
             return ApiResponse::failureMessage('responses.accounts.update_failed', 400);
         }
 
-        return ApiResponse::success();
+        return ApiResponse::success(AccountResource::make($account->fresh())->resolve());
     }
 
     private function canManageAccounts(User $user): bool

@@ -29,6 +29,12 @@ class SaleFactory extends Factory
             'owner_id_image' => '',
             'buyer_id_image' => '',
             'contract_image' => '',
+            'contract_type' => 'cash',
+            'installment_count' => null,
+            'installment_amount' => null,
+            'installment_start_date' => null,
+            'installment_end_date' => null,
+            'installment_note' => null,
             'date' => now()->toDateString(),
             'week_id' => Week::factory(),
             'car_brand' => 'BMW',
@@ -43,6 +49,9 @@ class SaleFactory extends Factory
             'owner_phone' => '0999999999',
             'status' => 'hold',
             'approved' => '0',
+            'requested_at' => now(),
+            'approved_at' => null,
+            'completed_at' => null,
         ];
     }
 
@@ -52,6 +61,8 @@ class SaleFactory extends Factory
             'status' => 'done',
             'approved' => '1',
             'buyer_comiss' => 100,
+            'approved_at' => now(),
+            'completed_at' => now(),
         ]);
     }
 }

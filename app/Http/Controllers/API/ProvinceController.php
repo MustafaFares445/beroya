@@ -60,7 +60,7 @@ class ProvinceController extends Controller
 
         $this->provinceService->delete($province);
 
-        return ApiResponse::success();
+        return ApiResponse::success(['id' => $province->id]);
     }
 
     private function canCreateProvince(Request $request): bool

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\UpdateAccountReceivedRequest;
+use App\Http\Resources\AccountResource;
 use App\Models\Account;
 use App\Models\User;
 use App\Services\AccountAdjustmentService;
@@ -12,9 +13,7 @@ use Illuminate\Http\JsonResponse;
 
 class AccountReceivedController extends Controller
 {
-    public function __construct(private readonly AccountAdjustmentService $accountAdjustmentService)
-    {
-    }
+    public function __construct(private readonly AccountAdjustmentService $accountAdjustmentService) {}
 
     public function __invoke(UpdateAccountReceivedRequest $request, Account $account): JsonResponse
     {
@@ -46,7 +45,7 @@ class AccountReceivedController extends Controller
             return ApiResponse::failureMessage('responses.accounts.received_update_failed', 400);
         }
 
-        return ApiResponse::success();
+        return ApiResponse::success(AccountResource::make($targetAccount->fresh())->resolve());
     }
 
     private function canManageAccounts(User $user): bool

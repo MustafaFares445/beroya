@@ -15,13 +15,11 @@ use Illuminate\Http\Request;
 
 class OrderController extends Controller
 {
-    public function __construct(private readonly OrderService $orderService)
-    {
-    }
+    public function __construct(private readonly OrderService $orderService) {}
 
     public function index(Request $request): JsonResponse
     {
-        if (!$this->canReadOrders($request)) {
+        if (! $this->canReadOrders($request)) {
             return ApiResponse::failureData('your computer harmly damaged', 403, 'responses.forbidden');
         }
 
@@ -32,7 +30,7 @@ class OrderController extends Controller
 
     public function store(StoreOrderRequest $request): JsonResponse
     {
-        if (!$this->canManageOrders($request)) {
+        if (! $this->canManageOrders($request)) {
             return ApiResponse::failureData('your computer harmly damaged', 403, 'responses.forbidden');
         }
 
@@ -43,7 +41,7 @@ class OrderController extends Controller
 
     public function show(Request $request, Order $order): JsonResponse
     {
-        if (!$this->canReadOrders($request)) {
+        if (! $this->canReadOrders($request)) {
             return ApiResponse::failureData('your computer harmly damaged', 403, 'responses.forbidden');
         }
 
@@ -52,7 +50,7 @@ class OrderController extends Controller
 
     public function update(UpdateOrderRequest $request, Order $order): JsonResponse
     {
-        if (!$this->canManageOrders($request)) {
+        if (! $this->canManageOrders($request)) {
             return ApiResponse::failureData('your computer harmly damaged', 403, 'responses.forbidden');
         }
 
@@ -63,13 +61,13 @@ class OrderController extends Controller
 
     public function destroy(Request $request, Order $order): JsonResponse
     {
-        if (!$this->canManageOrders($request)) {
+        if (! $this->canManageOrders($request)) {
             return ApiResponse::failureData('your computer harmly damaged', 403, 'responses.forbidden');
         }
 
         $this->orderService->delete($order);
 
-        return ApiResponse::success();
+        return ApiResponse::success(['id' => $order->id]);
     }
 
     private function canReadOrders(Request $request): bool
@@ -94,4 +92,3 @@ class OrderController extends Controller
         return in_array((int) $user->permetions_level, [1, 2, 3], true);
     }
 }
-

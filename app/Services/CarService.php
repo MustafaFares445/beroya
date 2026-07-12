@@ -3,18 +3,21 @@
 namespace App\Services;
 
 use App\Models\Car;
+use App\Models\User;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 
 class CarService
 {
+    public function __construct(private readonly ActivityLogger $activityLogger) {}
+
     /**
      * @param  array<string, mixed>  $payload
      */
-    public function store(array $payload): Car
+    public function store(array $payload, ?User $actor = null, ?string $ipAddress = null): Car
     {
-        return DB::transaction(function () use ($payload): Car {
+        return DB::transaction(function () use ($payload, $actor, $ipAddress): Car {
             $data = [
                 'market_id' => (int) $payload['market_id'],
                 'model_id' => (int) $payload['model_id'],
@@ -43,16 +46,29 @@ class CarService
                 $data["image_{$slot}"] = $file instanceof UploadedFile ? $this->saveImage($file) : '';
             }
 
-            return Car::query()->create($data);
+            $car = Car::query()->create($data);
+
+            $this->activityLogger->record(
+                $actor,
+                'car.created',
+                $car,
+                [],
+                $this->carActivityValues($car),
+                $ipAddress,
+            );
+
+            return $car;
         });
     }
 
     /**
      * @param  array<string, mixed>  $payload
      */
-    public function update(Car $car, array $payload): Car
+    public function update(Car $car, array $payload, ?User $actor = null, ?string $ipAddress = null): Car
     {
-        return DB::transaction(function () use ($car, $payload): Car {
+        return DB::transaction(function () use ($car, $payload, $actor, $ipAddress): Car {
+            $oldValues = $this->carActivityValues($car);
+
             $data = [
                 'market_id' => (int) $payload['market_id'],
                 'model_id' => (int) $payload['model_id'],
@@ -84,6 +100,7 @@ class CarService
                 if ($uploadedFile instanceof UploadedFile) {
                     $data[$field] = $this->saveImage($uploadedFile);
                     $this->deleteImage($oldImageName);
+
                     continue;
                 }
 
@@ -95,28 +112,69 @@ class CarService
 
             $car->update($data);
 
-            return $car->fresh();
+            $updatedCar = $car->fresh();
+
+            $this->activityLogger->record(
+                $actor,
+                'car.updated',
+                $updatedCar,
+                $oldValues,
+                $this->carActivityValues($updatedCar),
+                $ipAddress,
+            );
+
+            return $updatedCar;
         });
     }
 
-    public function updateSaleState(Car $car, int $saleState): Car
+    public function updateSaleState(Car $car, int $saleState, ?User $actor = null, ?string $ipAddress = null): Car
     {
+        $oldValues = [
+            'car_sale_state' => (int) $car->car_sale_state,
+        ];
+
         $car->update([
             'car_sale_state' => $saleState,
         ]);
 
-        return $car->fresh();
+        $updatedCar = $car->fresh();
+
+        $this->activityLogger->record(
+            $actor,
+            'car.sale_state_updated',
+            $updatedCar,
+            $oldValues,
+            [
+                'car_sale_state' => $saleState,
+            ],
+            $ipAddress,
+        );
+
+        return $updatedCar;
     }
 
-    public function delete(Car $car): void
+    public function delete(Car $car, ?User $actor = null, ?string $ipAddress = null): void
     {
-        for ($slot = 1; $slot <= 6; $slot++) {
-            $field = "image_{$slot}";
-            $imageName = (string) ($car->{$field} ?? '');
-            $this->deleteImage($imageName);
-        }
+        DB::transaction(function () use ($car, $actor, $ipAddress): void {
+            $oldValues = $this->carActivityValues($car);
 
-        $car->delete();
+            for ($slot = 1; $slot <= 6; $slot++) {
+                $field = "image_{$slot}";
+                $imageName = (string) ($car->{$field} ?? '');
+                $this->deleteImage($imageName);
+            }
+
+            $car->delete();
+
+            $this->activityLogger->record(
+                $actor,
+                'car.deleted',
+                $car,
+                $oldValues,
+                [],
+                $ipAddress,
+            );
+        });
     }
 
     private function saveImage(UploadedFile $file): string
@@ -166,5 +224,40 @@ class CarService
         }
 
         return false;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function carActivityValues(Car $car): array
+    {
+        return $car->only([
+            'market_id',
+            'model_id',
+            'year',
+            'gasoline',
+            'engine',
+            'transmission',
+            'color',
+            'distance',
+            'imported',
+            'spray',
+            'status',
+            'description',
+            'plateNumber',
+            'notes',
+            'price',
+            'possession',
+            'owner_name',
+            'owner_phone',
+            'gallery_id',
+            'image_1',
+            'image_2',
+            'image_3',
+            'image_4',
+            'image_5',
+            'image_6',
+            'car_sale_state',
+        ]);
     }
 }

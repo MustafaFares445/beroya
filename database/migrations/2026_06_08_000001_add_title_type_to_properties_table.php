@@ -8,15 +8,23 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('properties', function (Blueprint $table): void {
-            $table->string('title_type', 100)->after('property_nature');
-        });
+        if (Schema::hasTable('properties')) {
+            Schema::table('properties', function (Blueprint $table): void {
+                if (! Schema::hasColumn('properties', 'title_type')) {
+                    $table->string('title_type', 100)->after('property_nature');
+                }
+            });
+        }
     }
 
     public function down(): void
     {
-        Schema::table('properties', function (Blueprint $table): void {
-            $table->dropColumn('title_type');
-        });
+        if (Schema::hasTable('properties')) {
+            Schema::table('properties', function (Blueprint $table): void {
+                if (Schema::hasColumn('properties', 'title_type')) {
+                    $table->dropColumn('title_type');
+                }
+            });
+        }
     }
 };

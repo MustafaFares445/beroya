@@ -62,7 +62,7 @@ class RealEstateOfficeController extends Controller
 
         $this->realEstateOfficeService->delete($realEstateOffice);
 
-        return ApiResponse::success();
+        return ApiResponse::success(['id' => $realEstateOffice->id]);
     }
 
     private function canCreateRealEstateOffice(Request $request): bool

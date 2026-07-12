@@ -14,7 +14,7 @@ class MarketApiTest extends TestCase
 
     public function test_public_can_read_markets(): void
     {
-        Market::query()->create([
+        $market = Market::query()->create([
             'name' => 'BMW',
             'image' => 'bmw.webp',
         ]);
@@ -25,6 +25,13 @@ class MarketApiTest extends TestCase
             ->assertOk()
             ->assertJsonPath('status', 'success')
             ->assertJsonCount(1, 'data');
+
+        $this->getJson("/api/markets/{$market->id}")
+            ->assertOk()
+            ->assertJsonPath('status', 'success')
+            ->assertJsonPath('data.id', $market->id)
+            ->assertJsonPath('data.name', 'BMW')
+            ->assertJsonPath('data.image', 'bmw.webp');
     }
 
     public function test_user_with_permission_level_three_can_create_market(): void
@@ -69,6 +76,33 @@ class MarketApiTest extends TestCase
             ->assertOk()
             ->assertJsonPath('status', 'success')
             ->assertJsonPath('data.name', 'New');
+    }
+
+    public function test_manager_can_delete_market(): void
+    {
+        $market = Market::query()->create([
+            'name' => 'Hyundai',
+            'image' => 'hyundai.webp',
+        ]);
+
+        $manager = User::factory()->create([
+            'permetions_level' => 2,
+        ]);
+
+        $this->actingAsSanctum($manager);
+
+        $response = $this->deleteJson("/api/markets/{$market->id}");
+
+        $response
+            ->assertOk()
+            ->assertJsonPath('status', 'success')
+            ->assertJsonPath('data.id', $market->id)
+            ->assertJsonPath('data.name', 'Hyundai')
+            ->assertJsonPath('data.image', 'hyundai.webp');
+
+        $this->assertDatabaseMissing('markets', [
+            'id' => $market->id,
+        ]);
     }
 
     public function test_regular_user_cannot_create_market(): void

@@ -11,10 +11,17 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('users', function (Blueprint $table) {
-            $table->dropIndex('idx_token');
-            $table->dropColumn(['token', 'token_expiry']);
-        });
+        if (Schema::hasTable('users')) {
+            Schema::table('users', function (Blueprint $table) {
+                if (Schema::hasColumn('users', 'token')) {
+                    $table->dropColumn('token');
+                }
+
+                if (Schema::hasColumn('users', 'token_expiry')) {
+                    $table->dropColumn('token_expiry');
+                }
+            });
+        }
     }
 
     /**
@@ -22,9 +29,16 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('users', function (Blueprint $table) {
-            $table->string('token', 500)->nullable()->index('idx_token');
-            $table->dateTime('token_expiry')->nullable();
-        });
+        if (Schema::hasTable('users')) {
+            Schema::table('users', function (Blueprint $table) {
+                if (! Schema::hasColumn('users', 'token')) {
+                    $table->string('token', 500)->nullable()->index('idx_token');
+                }
+
+                if (! Schema::hasColumn('users', 'token_expiry')) {
+                    $table->dateTime('token_expiry')->nullable();
+                }
+            });
+        }
     }
 };

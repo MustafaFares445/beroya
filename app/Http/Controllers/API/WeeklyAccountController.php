@@ -14,9 +14,7 @@ use Illuminate\Http\JsonResponse;
 
 class WeeklyAccountController extends Controller
 {
-    public function __construct(private readonly AccountAdjustmentService $accountAdjustmentService)
-    {
-    }
+    public function __construct(private readonly AccountAdjustmentService $accountAdjustmentService) {}
 
     public function index(IndexWeeklyAccountsRequest $request): JsonResponse
     {
@@ -40,7 +38,7 @@ class WeeklyAccountController extends Controller
             ->first();
 
         if ($week === null) {
-            return ApiResponse::failureMessage('responses.accounts.week_not_found', 400);
+            return ApiResponse::success([], 200, ['message' => 'responses.no_accounts_for_week']);
         }
 
         if ($galleryId !== 0 || (int) $user->permetions_level !== 1) {

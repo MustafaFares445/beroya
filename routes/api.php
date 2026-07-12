@@ -3,7 +3,9 @@
 use App\Http\Controllers\API\AccountController;
 use App\Http\Controllers\API\AccountDetailsController;
 use App\Http\Controllers\API\AccountReceivedController;
+use App\Http\Controllers\API\ActivityLogController;
 use App\Http\Controllers\API\AdminBootstrapController;
+use App\Http\Controllers\API\ApproveOrderController;
 use App\Http\Controllers\API\ApproveSaleOrderController;
 use App\Http\Controllers\API\AuthController;
 use App\Http\Controllers\API\BonusController;
@@ -15,6 +17,8 @@ use App\Http\Controllers\API\DeductionController;
 use App\Http\Controllers\API\GalleryController;
 use App\Http\Controllers\API\GalleryPhoneController;
 use App\Http\Controllers\API\MarketController;
+use App\Http\Controllers\API\NotificationController;
+use App\Http\Controllers\API\OrderCheckedController;
 use App\Http\Controllers\API\OrderController;
 use App\Http\Controllers\API\PropertyCategoryController;
 use App\Http\Controllers\API\PropertyController;
@@ -25,7 +29,9 @@ use App\Http\Controllers\API\ProvinceController;
 use App\Http\Controllers\API\RealEstateOfficeController;
 use App\Http\Controllers\API\RealEstateOfficePhoneController;
 use App\Http\Controllers\API\RealEstateOptionsController;
+use App\Http\Controllers\API\RejectOrderController;
 use App\Http\Controllers\API\SaleController;
+use App\Http\Controllers\API\SaleInstallmentContractController;
 use App\Http\Controllers\API\SaleOrderController;
 use App\Http\Controllers\API\UserController;
 use App\Http\Controllers\API\UserPasswordController;
@@ -45,6 +51,7 @@ Route::get('markets/{market}', [MarketController::class, 'show']);
 Route::get('car-models', [CarModelController::class, 'index']);
 Route::get('car-models/{carModel}', [CarModelController::class, 'show']);
 Route::get('cars', [CarController::class, 'index']);
+Route::get('cars/latest', [CarController::class, 'latest']);
 Route::get('cars/{car}', [CarController::class, 'show']);
 Route::get('provinces', [ProvinceController::class, 'index']);
 Route::get('provinces/{province}', [ProvinceController::class, 'show']);
@@ -71,6 +78,10 @@ Route::middleware('auth:sanctum')->group(function (): void {
     Route::put('users/{user}', [UserController::class, 'update']);
     Route::delete('users/{user}', [UserController::class, 'destroy']);
     Route::put('users/{user}/password', UserPasswordController::class);
+    Route::get('activity-logs', [ActivityLogController::class, 'index']);
+    Route::get('notifications', [NotificationController::class, 'index']);
+    Route::put('notifications/{notification}/read', [NotificationController::class, 'markAsRead']);
+    Route::delete('notifications/{notification}', [NotificationController::class, 'destroy']);
 
     Route::post('galleries', [GalleryController::class, 'store']);
     Route::put('galleries/{gallery}', [GalleryController::class, 'update']);
@@ -122,6 +133,9 @@ Route::middleware('auth:sanctum')->group(function (): void {
     Route::post('orders', [OrderController::class, 'store']);
     Route::get('orders/{order}', [OrderController::class, 'show']);
     Route::put('orders/{order}', [OrderController::class, 'update']);
+    Route::put('orders/{order}/checked', [OrderCheckedController::class, 'update']);
+    Route::put('orders/{order}/approve', ApproveOrderController::class);
+    Route::put('orders/{order}/reject', RejectOrderController::class);
     Route::delete('orders/{order}', [OrderController::class, 'destroy']);
 
     Route::get('weeks', [WeekController::class, 'index']);
@@ -130,6 +144,7 @@ Route::middleware('auth:sanctum')->group(function (): void {
     Route::post('sales', [SaleController::class, 'store']);
     Route::get('sales/{sale}', [SaleController::class, 'show']);
     Route::put('sales/{sale}', [SaleController::class, 'update']);
+    Route::put('sales/{sale}/installment-contract', SaleInstallmentContractController::class);
     Route::put('sales/{sale}/complete', CompleteSaleController::class);
     Route::put('sales/{sale}/approve-order', ApproveSaleOrderController::class);
     Route::delete('sale-orders/{sale}', SaleOrderController::class);

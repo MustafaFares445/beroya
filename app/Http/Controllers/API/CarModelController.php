@@ -15,9 +15,7 @@ use Illuminate\Http\Request;
 
 class CarModelController extends Controller
 {
-    public function __construct(private readonly CarModelService $carModelService)
-    {
-    }
+    public function __construct(private readonly CarModelService $carModelService) {}
 
     public function index(): JsonResponse
     {
@@ -28,7 +26,7 @@ class CarModelController extends Controller
 
     public function store(StoreCarModelRequest $request): JsonResponse
     {
-        if (!$this->canCreateModel($request)) {
+        if (! $this->canCreateModel($request)) {
             return ApiResponse::failureData('your computer harmly damaged', 403, 'responses.forbidden');
         }
 
@@ -44,7 +42,7 @@ class CarModelController extends Controller
 
     public function update(UpdateCarModelRequest $request, CarModel $carModel): JsonResponse
     {
-        if (!$this->canManageModel($request)) {
+        if (! $this->canManageModel($request)) {
             return ApiResponse::failureData('your computer harmly damaged', 403, 'responses.forbidden');
         }
 
@@ -55,13 +53,13 @@ class CarModelController extends Controller
 
     public function destroy(Request $request, CarModel $carModel): JsonResponse
     {
-        if (!$this->canManageModel($request)) {
+        if (! $this->canManageModel($request)) {
             return ApiResponse::failureData('your computer harmly damaged', 403, 'responses.forbidden');
         }
 
         $this->carModelService->delete($carModel);
 
-        return ApiResponse::success();
+        return ApiResponse::success(['id' => $carModel->id]);
     }
 
     private function canCreateModel(Request $request): bool
@@ -86,4 +84,3 @@ class CarModelController extends Controller
         return in_array((int) $user->permetions_level, [1, 2], true);
     }
 }
-

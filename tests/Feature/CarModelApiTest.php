@@ -30,6 +30,15 @@ class CarModelApiTest extends TestCase
             ->assertOk()
             ->assertJsonPath('status', 'success')
             ->assertJsonCount(1, 'data');
+
+        $carModel = CarModel::query()->firstOrFail();
+
+        $this->getJson("/api/car-models/{$carModel->id}")
+            ->assertOk()
+            ->assertJsonPath('status', 'success')
+            ->assertJsonPath('data.id', $carModel->id)
+            ->assertJsonPath('data.name', 'Sportage')
+            ->assertJsonPath('data.market_id', $market->id);
     }
 
     public function test_user_with_permission_level_three_can_create_model(): void
@@ -83,6 +92,36 @@ class CarModelApiTest extends TestCase
             ->assertOk()
             ->assertJsonPath('status', 'success')
             ->assertJsonPath('data.name', 'A4');
+    }
+
+    public function test_manager_can_delete_model(): void
+    {
+        $market = Market::query()->create([
+            'name' => 'Audi',
+            'image' => 'audi.webp',
+        ]);
+
+        $carModel = CarModel::query()->create([
+            'name' => 'A6',
+            'market_id' => $market->id,
+        ]);
+
+        $manager = User::factory()->create([
+            'permetions_level' => 2,
+        ]);
+
+        $this->actingAsSanctum($manager);
+
+        $response = $this->deleteJson("/api/car-models/{$carModel->id}");
+
+        $response
+            ->assertOk()
+            ->assertJsonPath('status', 'success')
+            ->assertJsonPath('data.id', $carModel->id);
+
+        $this->assertDatabaseMissing('models', [
+            'id' => $carModel->id,
+        ]);
     }
 
     public function test_regular_user_cannot_create_model(): void

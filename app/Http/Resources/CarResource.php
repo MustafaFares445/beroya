@@ -42,6 +42,8 @@ class CarResource extends JsonResource
             'image_5' => $this->image_5,
             'image_6' => $this->image_6,
             'car_sale_state' => $this->car_sale_state,
+            'created_at' => $this->created_at?->format('Y-m-d H:i:s'),
+            'updated_at' => $this->updated_at?->format('Y-m-d H:i:s'),
         ];
     }
 }

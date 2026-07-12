@@ -20,6 +20,7 @@ class ApproveSaleOrderRequest extends FormRequest
         return [
             'ownerName' => ['required', 'string', 'max:255'],
             'ownerPhone' => ['required', 'string', 'max:50'],
+            'carNumber' => ['required', 'string', 'max:255'],
         ];
     }
 }

@@ -15,9 +15,7 @@ use Illuminate\Http\Request;
 
 class GalleryController extends Controller
 {
-    public function __construct(private readonly GalleryService $galleryService)
-    {
-    }
+    public function __construct(private readonly GalleryService $galleryService) {}
 
     public function index(): JsonResponse
     {
@@ -28,7 +26,7 @@ class GalleryController extends Controller
 
     public function store(StoreGalleryRequest $request): JsonResponse
     {
-        if (!$this->canManageGalleries($request)) {
+        if (! $this->canManageGalleries($request)) {
             return ApiResponse::failureData('your computer harmly damaged', 403, 'responses.forbidden');
         }
 
@@ -44,7 +42,7 @@ class GalleryController extends Controller
 
     public function update(UpdateGalleryRequest $request, Gallery $gallery): JsonResponse
     {
-        if (!$this->canManageGalleries($request)) {
+        if (! $this->canManageGalleries($request)) {
             return ApiResponse::failureData('your computer harmly damaged', 403, 'responses.forbidden');
         }
 
@@ -55,13 +53,13 @@ class GalleryController extends Controller
 
     public function destroy(Request $request, Gallery $gallery): JsonResponse
     {
-        if (!$this->canManageGalleries($request)) {
+        if (! $this->canManageGalleries($request)) {
             return ApiResponse::failureData('your computer harmly damaged', 403, 'responses.forbidden');
         }
 
         $this->galleryService->delete($gallery);
 
-        return ApiResponse::success();
+        return ApiResponse::success(['id' => $gallery->id]);
     }
 
     private function canManageGalleries(Request $request): bool
@@ -75,4 +73,3 @@ class GalleryController extends Controller
         return (int) $user->permetions_level === 1;
     }
 }
-
