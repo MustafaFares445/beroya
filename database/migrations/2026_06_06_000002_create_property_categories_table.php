@@ -8,10 +8,13 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('property_categories', function (Blueprint $table): void {
-            $table->increments('id');
-            $table->string('name', 255);
-        });
+        if (! Schema::hasTable('property_categories')) {
+            Schema::create('property_categories', function (Blueprint $table): void {
+                $table->increments('id');
+                $table->string('name', 255);
+            });
+        }
+
     }
 
     public function down(): void

@@ -8,11 +8,14 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('markets', function (Blueprint $table): void {
-            $table->increments('id');
-            $table->text('name');
-            $table->text('image');
-        });
+        if (! Schema::hasTable('markets')) {
+            Schema::create('markets', function (Blueprint $table): void {
+                $table->increments('id');
+                $table->text('name');
+                $table->text('image');
+            });
+        }
+
     }
 
     public function down(): void

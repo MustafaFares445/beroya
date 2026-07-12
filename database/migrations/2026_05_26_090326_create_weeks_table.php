@@ -8,13 +8,16 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('weeks', function (Blueprint $table): void {
-            $table->bigIncrements('id');
-            $table->integer('week_num');
-            $table->integer('year');
-            $table->date('start_date');
-            $table->date('end_date');
-        });
+        if (! Schema::hasTable('weeks')) {
+            Schema::create('weeks', function (Blueprint $table): void {
+                $table->bigIncrements('id');
+                $table->integer('week_num');
+                $table->integer('year');
+                $table->date('start_date');
+                $table->date('end_date');
+            });
+        }
+
     }
 
     public function down(): void

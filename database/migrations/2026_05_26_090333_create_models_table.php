@@ -8,17 +8,20 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('models', function (Blueprint $table): void {
-            $table->increments('id');
-            $table->string('name', 30);
-            $table->unsignedInteger('market_id');
+        if (! Schema::hasTable('models')) {
+            Schema::create('models', function (Blueprint $table): void {
+                $table->increments('id');
+                $table->string('name', 30);
+                $table->unsignedInteger('market_id');
 
-            $table->foreign('market_id')
-                ->references('id')
-                ->on('markets')
-                ->cascadeOnDelete()
-                ->cascadeOnUpdate();
-        });
+                $table->foreign('market_id')
+                    ->references('id')
+                    ->on('markets')
+                    ->cascadeOnDelete()
+                    ->cascadeOnUpdate();
+            });
+        }
+
     }
 
     public function down(): void

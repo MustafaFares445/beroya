@@ -8,18 +8,21 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('bonus', function (Blueprint $table): void {
-            $table->bigIncrements('id');
-            $table->integer('amount');
-            $table->text('description')->nullable();
-            $table->unsignedBigInteger('accountant_id');
+        if (! Schema::hasTable('bonus')) {
+            Schema::create('bonus', function (Blueprint $table): void {
+                $table->bigIncrements('id');
+                $table->integer('amount');
+                $table->text('description')->nullable();
+                $table->unsignedBigInteger('accountant_id');
 
-            $table->foreign('accountant_id')
-                ->references('id')
-                ->on('accountants')
-                ->cascadeOnDelete()
-                ->cascadeOnUpdate();
-        });
+                $table->foreign('accountant_id')
+                    ->references('id')
+                    ->on('accountants')
+                    ->cascadeOnDelete()
+                    ->cascadeOnUpdate();
+            });
+        }
+
     }
 
     public function down(): void

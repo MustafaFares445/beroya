@@ -8,19 +8,22 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('real_estate_offices', function (Blueprint $table): void {
-            $table->increments('id');
-            $table->unsignedInteger('province_id');
-            $table->string('name', 255);
-            $table->text('address');
-            $table->boolean('is_active')->default(true);
+        if (! Schema::hasTable('real_estate_offices')) {
+            Schema::create('real_estate_offices', function (Blueprint $table): void {
+                $table->increments('id');
+                $table->unsignedInteger('province_id');
+                $table->string('name', 255);
+                $table->text('address');
+                $table->boolean('is_active')->default(true);
 
-            $table->foreign('province_id')
-                ->references('id')
-                ->on('provinces')
-                ->cascadeOnDelete()
-                ->cascadeOnUpdate();
-        });
+                $table->foreign('province_id')
+                    ->references('id')
+                    ->on('provinces')
+                    ->cascadeOnDelete()
+                    ->cascadeOnUpdate();
+            });
+        }
+
     }
 
     public function down(): void

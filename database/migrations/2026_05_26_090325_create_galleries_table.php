@@ -8,11 +8,14 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('galleries', function (Blueprint $table): void {
-            $table->increments('id');
-            $table->string('name', 50);
-            $table->text('address');
-        });
+        if (! Schema::hasTable('galleries')) {
+            Schema::create('galleries', function (Blueprint $table): void {
+                $table->increments('id');
+                $table->string('name', 50);
+                $table->text('address');
+            });
+        }
+
     }
 
     public function down(): void
