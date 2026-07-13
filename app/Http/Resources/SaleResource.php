@@ -4,6 +4,7 @@ namespace App\Http\Resources;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Support\Facades\Storage;
 
 class SaleResource extends JsonResource
 {
@@ -22,9 +23,9 @@ class SaleResource extends JsonResource
             'owner_comiss_payed' => $this->owner_comiss_payed,
             'buyer_comiss' => $this->buyer_comiss,
             'buyer_comiss_payed' => $this->buyer_comiss_payed,
-            'owner_id_image' => $this->owner_id_image,
-            'buyer_id_image' => $this->buyer_id_image,
-            'contract_image' => $this->contract_image,
+            'owner_id_image' => $this->mediaUrl($this->owner_id_image),
+            'buyer_id_image' => $this->mediaUrl($this->buyer_id_image),
+            'contract_image' => $this->mediaUrl($this->contract_image),
             'date' => $this->date?->format('Y-m-d'),
             'week_id' => $this->week_id,
             'car_brand' => $this->car_brand,
@@ -51,5 +52,21 @@ class SaleResource extends JsonResource
             'updated_at' => $this->updated_at?->format('Y-m-d H:i:s'),
             'approved' => $this->approved,
         ];
+    }
+
+    private function mediaUrl(?string $path): ?string
+    {
+        if ($path === null || $path === '') {
+            return null;
+        }
+
+        $path = str_starts_with($path, 'sales/') ? $path : 'sales/'.$path;
+        $disk = Storage::disk('local');
+
+        if (! $disk->exists($path)) {
+            return null;
+        }
+
+        return $disk->temporaryUrl($path, now()->addMinutes(30));
     }
 }

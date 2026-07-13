@@ -11,6 +11,8 @@ use App\Models\Sale;
 use App\Models\User;
 use App\Models\Week;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class SaleApiTest extends TestCase
@@ -142,6 +144,39 @@ class SaleApiTest extends TestCase
             ->assertJsonPath('data.id', $saleId)
             ->assertJsonPath('data.status', 'hold')
             ->assertJsonPath('data.requested_at', $response->json('data.requested_at'));
+    }
+
+    public function test_sale_media_is_stored_privately_and_returned_as_temporary_links(): void
+    {
+        Storage::fake('local');
+
+        $context = $this->createSaleContext();
+        $this->actingAsSanctum($context['seller']);
+
+        $payload = $this->salePayload($context['car']->id, $context['seller']->id);
+        $payload['owner_id_image'] = UploadedFile::fake()->image('owner-id.jpg');
+        $payload['buyer_id_image'] = UploadedFile::fake()->image('buyer-id.jpg');
+        $payload['contract_image'] = UploadedFile::fake()->image('contract.jpg');
+
+        $response = $this->post('/api/sales', $payload, [
+            'Accept' => 'application/json',
+        ]);
+
+        $response
+            ->assertOk()
+            ->assertJsonPath('status', 'success');
+
+        $sale = Sale::query()->findOrFail($response->json('data.id'));
+        $expectedUrlPrefix = rtrim((string) config('app.url'), '/').'/sales/';
+
+        foreach (['owner_id_image', 'buyer_id_image', 'contract_image'] as $field) {
+            $this->assertStringStartsWith('sales/', $sale->{$field});
+            Storage::disk('local')->assertExists($sale->{$field});
+            $this->assertStringStartsWith($expectedUrlPrefix, $response->json('data.'.$field));
+            $this->assertStringContainsString('expiration=', $response->json('data.'.$field));
+        }
+
+        $this->assertFileDoesNotExist(public_path('data/uploads/sales/'.basename($sale->owner_id_image)));
     }
 
     public function test_user_can_create_done_sale_when_buyer_commission_is_non_zero(): void

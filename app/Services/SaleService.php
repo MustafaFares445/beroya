@@ -8,10 +8,15 @@ use App\Models\Week;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Storage;
+use RuntimeException;
 
 class SaleService
 {
+    private const SALES_MEDIA_DISK = 'local';
+
+    private const SALES_MEDIA_DIRECTORY = 'sales';
+
     public function __construct(
         private readonly AccountService $accountService,
         private readonly CarService $carService,
@@ -417,13 +422,19 @@ class SaleService
 
     private function saveImage(UploadedFile $file): string
     {
-        $directory = $this->salesUploadDirectory();
         $extension = strtolower($file->getClientOriginalExtension() ?: $file->extension() ?: 'bin');
         $fileName = bin2hex(random_bytes(16)).'.'.$extension;
+        $storedPath = Storage::disk(self::SALES_MEDIA_DISK)->putFileAs(
+            self::SALES_MEDIA_DIRECTORY,
+            $file,
+            $fileName,
+        );
 
-        $file->move($directory, $fileName);
+        if ($storedPath === false) {
+            throw new RuntimeException('Unable to store sale media.');
+        }
 
-        return $fileName;
+        return $storedPath;
     }
 
     private function deleteImage(string $imageName): void
@@ -432,19 +443,7 @@ class SaleService
             return;
         }
 
-        $imagePath = $this->salesUploadDirectory().DIRECTORY_SEPARATOR.$imageName;
-
-        if (File::exists($imagePath)) {
-            File::delete($imagePath);
-        }
-    }
-
-    private function salesUploadDirectory(): string
-    {
-        $directory = public_path('data/uploads/sales');
-        File::ensureDirectoryExists($directory);
-
-        return $directory;
+        Storage::disk(self::SALES_MEDIA_DISK)->delete($imageName);
     }
 
     /**
