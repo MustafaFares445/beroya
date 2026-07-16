@@ -73,7 +73,7 @@ class AuthService
 
         return [
             'success' => true,
-            'user' => $user->loadMissing('realEstateOffice.province'),
+            'user' => $user->loadMissing(['realEstateProvince', 'realEstateOffice.province']),
             'token' => $accessToken->plainTextToken,
             'token_expiry' => $tokenExpiry,
         ];

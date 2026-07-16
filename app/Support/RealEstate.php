@@ -135,6 +135,14 @@ final class RealEstate
         ));
     }
 
+    /**
+     * @return array<int, string>
+     */
+    public static function realEstateRoleValues(): array
+    {
+        return self::optionValues(self::realEstateRoleOptions());
+    }
+
     public static function roleLabel(?string $role, ?int $permissionLevel = null): ?string
     {
         if ($role === null || trim($role) === '') {
@@ -163,12 +171,21 @@ final class RealEstate
 
     private static function roleLabelFromPermissionLevel(?int $permissionLevel): ?string
     {
-        return match ($permissionLevel) {
-            1 => 'مدير محافظة',
-            2 => 'مدير مكتب',
-            3, 4 => 'موظف مكتب',
+        $role = match ($permissionLevel) {
+            1 => 'general_manager',
+            2 => 'province_manager',
+            3 => 'office_manager',
+            4 => 'office_employee',
             default => null,
         };
+
+        if ($role === null) {
+            return null;
+        }
+
+        $label = config('real_estate.real_estate_roles.'.$role.'.label');
+
+        return is_string($label) && $label !== '' ? $label : null;
     }
 
     public static function canCreateLookupData(User $user): bool

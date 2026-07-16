@@ -9,14 +9,17 @@ use App\Models\Property;
 use App\Models\PropertyImage;
 use App\Models\User;
 use App\Services\PropertyService;
+use App\Services\RealEstateAccessService;
 use App\Support\ApiResponse;
-use App\Support\RealEstate;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class PropertyImageController extends Controller
 {
-    public function __construct(private readonly PropertyService $propertyService) {}
+    public function __construct(
+        private readonly PropertyService $propertyService,
+        private readonly RealEstateAccessService $realEstateAccessService
+    ) {}
 
     public function store(StorePropertyImagesRequest $request, Property $property): JsonResponse
     {
@@ -48,6 +51,6 @@ class PropertyImageController extends Controller
             return false;
         }
 
-        return RealEstate::canManageProperties($user);
+        return $this->realEstateAccessService->canManageProperties($user);
     }
 }

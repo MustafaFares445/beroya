@@ -9,14 +9,17 @@ use App\Http\Resources\ProvinceResource;
 use App\Models\Province;
 use App\Models\User;
 use App\Services\ProvinceService;
+use App\Services\RealEstateAccessService;
 use App\Support\ApiResponse;
-use App\Support\RealEstate;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class ProvinceController extends Controller
 {
-    public function __construct(private readonly ProvinceService $provinceService) {}
+    public function __construct(
+        private readonly ProvinceService $provinceService,
+        private readonly RealEstateAccessService $realEstateAccessService
+    ) {}
 
     public function index(): JsonResponse
     {
@@ -32,7 +35,7 @@ class ProvinceController extends Controller
 
     public function store(StoreProvinceRequest $request): JsonResponse
     {
-        if (! $this->canCreateProvince($request)) {
+        if (! $this->canManageProvince($request)) {
             return ApiResponse::failureData('your computer harmly damaged', 403, 'responses.forbidden');
         }
 
@@ -63,17 +66,6 @@ class ProvinceController extends Controller
         return ApiResponse::success(['id' => $province->id]);
     }
 
-    private function canCreateProvince(Request $request): bool
-    {
-        /** @var User|null $user */
-        $user = $request->user();
-        if ($user === null) {
-            return false;
-        }
-
-        return RealEstate::canCreateLookupData($user);
-    }
-
     private function canManageProvince(Request $request): bool
     {
         /** @var User|null $user */
@@ -82,6 +74,6 @@ class ProvinceController extends Controller
             return false;
         }
 
-        return RealEstate::canManageLookupData($user);
+        return $this->realEstateAccessService->canManageProvinces($user);
     }
 }

@@ -32,7 +32,7 @@ class AuthController extends Controller
         $token = (string) $result['token'];
         /** @var Carbon $tokenExpiry */
         $tokenExpiry = $result['token_expiry'];
-        $user->loadMissing('realEstateOffice.province');
+        $user->loadMissing(['realEstateProvince', 'realEstateOffice.province']);
         $permissionLevel = $user->permetions_level !== null ? (int) $user->permetions_level : null;
 
         return ApiResponse::success([

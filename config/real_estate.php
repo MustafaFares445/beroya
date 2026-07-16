@@ -148,6 +148,11 @@ return [
     ],
 
     'real_estate_roles' => [
+        'general_manager' => [
+            'value' => 'general_manager',
+            'label' => 'مدير عام',
+            'can_review' => true,
+        ],
         'province_manager' => [
             'value' => 'province_manager',
             'label' => 'مدير محافظة',

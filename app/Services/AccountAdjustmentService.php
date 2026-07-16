@@ -11,9 +11,9 @@ use App\Models\Week;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
-class AccountAdjustmentService
+readonly class AccountAdjustmentService
 {
-    public function __construct(private readonly AccountService $accountService) {}
+    public function __construct(private AccountService $accountService) {}
 
     /**
      * @return Collection<int, Account>

@@ -27,6 +27,7 @@ class UserFactory extends Factory
             'user_name' => fake()->unique()->userName(),
             'password' => static::$password ??= Hash::make('password'),
             'gallery_id' => 1,
+            'real_estate_province_id' => null,
             'real_estate_office_id' => null,
             'real_estate_role' => null,
             'permetions_level' => 4,

@@ -9,14 +9,17 @@ use App\Http\Resources\PropertySubmissionResource;
 use App\Models\PropertySubmission;
 use App\Models\User;
 use App\Services\PropertySubmissionService;
+use App\Services\RealEstateAccessService;
 use App\Support\ApiResponse;
-use App\Support\RealEstate;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class PropertySubmissionController extends Controller
 {
-    public function __construct(private readonly PropertySubmissionService $propertySubmissionService) {}
+    public function __construct(
+        private readonly PropertySubmissionService $propertySubmissionService,
+        private readonly RealEstateAccessService $realEstateAccessService
+    ) {}
 
     public function index(Request $request): JsonResponse
     {
@@ -86,6 +89,6 @@ class PropertySubmissionController extends Controller
             return false;
         }
 
-        return RealEstate::canReviewPropertySubmissions($user);
+        return $this->realEstateAccessService->canReviewPropertySubmissions($user);
     }
 }

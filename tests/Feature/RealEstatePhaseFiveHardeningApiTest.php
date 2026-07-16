@@ -200,7 +200,7 @@ class RealEstatePhaseFiveHardeningApiTest extends TestCase
             'gallery_id' => 0,
             'real_estate_office_id' => $context['office']->id,
             'real_estate_role' => 'office_employee',
-            'permetions_level' => 3,
+            'permetions_level' => 4,
             'salary' => 0,
             'phone' => '0999000020',
         ]);

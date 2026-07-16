@@ -8,15 +8,18 @@ use App\Http\Requests\UpdateRealEstateOfficePhoneRequest;
 use App\Http\Resources\OfficePhoneResource;
 use App\Models\RealEstateOfficePhone;
 use App\Models\User;
+use App\Services\RealEstateAccessService;
 use App\Services\RealEstateOfficePhoneService;
 use App\Support\ApiResponse;
-use App\Support\RealEstate;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class RealEstateOfficePhoneController extends Controller
 {
-    public function __construct(private readonly RealEstateOfficePhoneService $realEstateOfficePhoneService) {}
+    public function __construct(
+        private readonly RealEstateOfficePhoneService $realEstateOfficePhoneService,
+        private readonly RealEstateAccessService $realEstateAccessService
+    ) {}
 
     public function index(): JsonResponse
     {
@@ -32,24 +35,32 @@ class RealEstateOfficePhoneController extends Controller
 
     public function store(StoreRealEstateOfficePhoneRequest $request): JsonResponse
     {
-        if (! $this->canCreateRealEstateOfficePhone($request)) {
+        $payload = $request->validated();
+
+        if (! $this->canCreateRealEstateOfficePhone($request, (int) $payload['real_estate_office_id'])) {
             return ApiResponse::failureData('your computer harmly damaged', 403, 'responses.forbidden');
         }
 
-        $realEstateOfficePhone = $this->realEstateOfficePhoneService->store($request->validated());
+        $realEstateOfficePhone = $this->realEstateOfficePhoneService->store($payload);
 
         return ApiResponse::success(OfficePhoneResource::make($realEstateOfficePhone)->resolve());
     }
 
     public function update(UpdateRealEstateOfficePhoneRequest $request, RealEstateOfficePhone $realEstateOfficePhone): JsonResponse
     {
-        if (! $this->canManageRealEstateOfficePhone($request)) {
+        $payload = $request->validated();
+
+        if (! $this->canUpdateRealEstateOfficePhone(
+            $request,
+            $realEstateOfficePhone,
+            (int) $payload['real_estate_office_id']
+        )) {
             return ApiResponse::failureData('your computer harmly damaged', 403, 'responses.forbidden');
         }
 
         $updatedRealEstateOfficePhone = $this->realEstateOfficePhoneService->update(
             $realEstateOfficePhone,
-            $request->validated()
+            $payload
         );
 
         return ApiResponse::success(OfficePhoneResource::make($updatedRealEstateOfficePhone)->resolve());
@@ -57,7 +68,7 @@ class RealEstateOfficePhoneController extends Controller
 
     public function destroy(Request $request, RealEstateOfficePhone $realEstateOfficePhone): JsonResponse
     {
-        if (! $this->canManageRealEstateOfficePhone($request)) {
+        if (! $this->canDeleteRealEstateOfficePhone($request, $realEstateOfficePhone)) {
             return ApiResponse::failureData('your computer harmly damaged', 403, 'responses.forbidden');
         }
 
@@ -66,7 +77,7 @@ class RealEstateOfficePhoneController extends Controller
         return ApiResponse::success(['id' => $realEstateOfficePhone->id]);
     }
 
-    private function canCreateRealEstateOfficePhone(Request $request): bool
+    private function canCreateRealEstateOfficePhone(Request $request, int $officeId): bool
     {
         /** @var User|null $user */
         $user = $request->user();
@@ -74,10 +85,14 @@ class RealEstateOfficePhoneController extends Controller
             return false;
         }
 
-        return RealEstate::canCreateLookupData($user);
+        return $this->realEstateAccessService->canCreateOfficePhone($user, $officeId);
     }
 
-    private function canManageRealEstateOfficePhone(Request $request): bool
+    private function canUpdateRealEstateOfficePhone(
+        Request $request,
+        RealEstateOfficePhone $realEstateOfficePhone,
+        int $officeId
+    ): bool
     {
         /** @var User|null $user */
         $user = $request->user();
@@ -85,6 +100,19 @@ class RealEstateOfficePhoneController extends Controller
             return false;
         }
 
-        return RealEstate::canManageLookupData($user);
+        return $this->realEstateAccessService->canUpdateOfficePhone($user, $realEstateOfficePhone, $officeId);
+    }
+
+    private function canDeleteRealEstateOfficePhone(
+        Request $request,
+        RealEstateOfficePhone $realEstateOfficePhone
+    ): bool {
+        /** @var User|null $user */
+        $user = $request->user();
+        if ($user === null) {
+            return false;
+        }
+
+        return $this->realEstateAccessService->canDeleteOfficePhone($user, $realEstateOfficePhone);
     }
 }

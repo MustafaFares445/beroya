@@ -21,6 +21,7 @@ class UserService
                 'user_name' => (string) $payload['user_name'],
                 'password' => Hash::make((string) $payload['password']),
                 'gallery_id' => (int) $payload['gallery_id'],
+                'real_estate_province_id' => $this->nullableInteger($payload, 'real_estate_province_id'),
                 'real_estate_office_id' => $this->nullableInteger($payload, 'real_estate_office_id'),
                 'real_estate_role' => $this->nullableString($payload, 'real_estate_role'),
                 'permetions_level' => (int) $payload['permetions_level'],
@@ -29,7 +30,7 @@ class UserService
                 'is_active' => true,
             ]);
 
-            return $user->fresh(['realEstateOffice.province']) ?? $user;
+            return $user->fresh(['realEstateProvince', 'realEstateOffice.province']) ?? $user;
         });
     }
 
@@ -55,6 +56,10 @@ class UserService
                 $user->real_estate_office_id = $this->nullableInteger($payload, 'real_estate_office_id');
             }
 
+            if (array_key_exists('real_estate_province_id', $payload)) {
+                $user->real_estate_province_id = $this->nullableInteger($payload, 'real_estate_province_id');
+            }
+
             if (array_key_exists('real_estate_role', $payload)) {
                 $user->real_estate_role = $this->nullableString($payload, 'real_estate_role');
             }
@@ -62,7 +67,7 @@ class UserService
             $user->save();
             $this->accountService->recalculateUserAccounts((int) $user->id);
 
-            return $user->fresh(['realEstateOffice.province']) ?? $user;
+            return $user->fresh(['realEstateProvince', 'realEstateOffice.province']) ?? $user;
         });
     }
 

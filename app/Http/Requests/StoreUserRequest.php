@@ -2,8 +2,10 @@
 
 namespace App\Http\Requests;
 
+use App\Support\RealEstate;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StoreUserRequest extends FormRequest
 {
@@ -23,8 +25,9 @@ class StoreUserRequest extends FormRequest
             'user_name' => ['required', 'string', 'max:255'],
             'password' => ['required', 'string'],
             'gallery_id' => ['required', 'integer'],
-            'real_estate_office_id' => ['nullable', 'integer', 'exists:real_estate_offices,id'],
-            'real_estate_role' => ['nullable', 'string', 'max:255'],
+            'real_estate_province_id' => ['nullable', 'required_if:permetions_level,2', 'integer', 'exists:provinces,id'],
+            'real_estate_office_id' => ['nullable', 'required_if:permetions_level,3,4', 'integer', 'exists:real_estate_offices,id'],
+            'real_estate_role' => ['nullable', 'string', 'max:255', Rule::in(RealEstate::realEstateRoleValues())],
             'permetions_level' => ['required', 'integer'],
             'salary' => ['required', 'integer'],
             'phone' => ['required', 'string', 'max:20'],
