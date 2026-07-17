@@ -66,6 +66,37 @@ class RealEstatePhaseTwoUserAssignmentApiTest extends TestCase
             ->assertJsonPath('data.phone', '0999000001');
     }
 
+    public function test_login_returns_direct_province_assignment_for_province_manager(): void
+    {
+        $province = Province::query()->create([
+            'name' => 'Damascus',
+            'is_active' => true,
+        ]);
+
+        User::query()->create([
+            'user_name' => 'province-manager',
+            'password' => Hash::make('secret'),
+            'gallery_id' => 0,
+            'real_estate_province_id' => $province->id,
+            'real_estate_role' => 'province_manager',
+            'permetions_level' => 2,
+            'salary' => 2000,
+            'phone' => '0999000002',
+        ]);
+
+        $response = $this->postJson('/api/auth/login', [
+            'username' => 'province-manager',
+            'password' => 'secret',
+        ]);
+
+        $response
+            ->assertOk()
+            ->assertJsonPath('data.real_estate_province_id', $province->id)
+            ->assertJsonPath('data.real_estate_province_name', 'Damascus')
+            ->assertJsonPath('data.real_estate_office_id', null)
+            ->assertJsonPath('data.real_estate_office_name', null);
+    }
+
     public function test_admin_can_store_and_update_user_real_estate_assignment_fields(): void
     {
         $province = Province::query()->create([
