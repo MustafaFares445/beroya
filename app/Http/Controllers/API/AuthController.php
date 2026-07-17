@@ -4,6 +4,7 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\LoginRequest;
+use App\Http\Resources\UserResource;
 use App\Models\User;
 use App\Services\AuthService;
 use App\Support\ApiResponse;
@@ -33,22 +34,13 @@ class AuthController extends Controller
         /** @var Carbon $tokenExpiry */
         $tokenExpiry = $result['token_expiry'];
         $user->loadMissing(['realEstateProvince', 'realEstateOffice.province']);
-        $permissionLevel = $user->permetions_level !== null ? (int) $user->permetions_level : null;
+        $userData = UserResource::make($user)->resolve();
+        $userData['real_estate_role_label'] = RealEstate::roleLabel(
+            $user->real_estate_role,
+            $user->permetions_level !== null ? (int) $user->permetions_level : null
+        );
 
-        return ApiResponse::success([
-            'id' => $user->id,
-            'user_name' => $user->user_name,
-            'gallery_id' => $user->gallery_id,
-            'real_estate_office_id' => $user->real_estate_office_id,
-            'real_estate_office_name' => $user->realEstateOffice?->name,
-            'real_estate_province_id' => $user->real_estate_province_id ?? $user->realEstateOffice?->province?->id,
-            'real_estate_province_name' => $user->realEstateProvince?->name ?? $user->realEstateOffice?->province?->name,
-            'real_estate_role' => $user->real_estate_role,
-            'real_estate_role_label' => RealEstate::roleLabel($user->real_estate_role, $permissionLevel),
-            'permetions_level' => $user->permetions_level,
-            'salary' => $user->salary,
-            'phone' => $user->phone,
-        ], 200, [
+        return ApiResponse::success($userData, 200, [
             'token' => $token,
             'token_expiry' => $tokenExpiry->format('Y-m-d H:i:s'),
         ]);
