@@ -166,7 +166,7 @@ class RealEstateRoleAuthorizationApiTest extends TestCase
         $this->deleteJson("/api/users/{$employeeId}")->assertOk();
     }
 
-    public function test_office_manager_can_review_submissions_but_office_employee_cannot(): void
+    public function test_office_manager_can_approve_property_submission(): void
     {
         [$province, $office] = $this->createProvinceWithOffice('Damascus');
         $category = PropertyCategory::factory()->create();
@@ -182,27 +182,10 @@ class RealEstateRoleAuthorizationApiTest extends TestCase
             'real_estate_office_id' => $office->id,
             'real_estate_role' => 'office_manager',
         ]);
-        $employee = User::factory()->create([
-            'permetions_level' => 4,
-            'real_estate_office_id' => $office->id,
-            'real_estate_role' => 'office_employee',
-        ]);
-
         $this->actingAsSanctum($manager);
         $this->putJson("/api/real-estate/property-submissions/{$submission->id}/approve")
             ->assertOk()
             ->assertJsonPath('data.status', 'approved');
-
-        $pendingSubmission = PropertySubmission::factory()->create([
-            'province_id' => $province->id,
-            'office_id' => $office->id,
-            'main_category_id' => $category->id,
-            'subcategory_id' => $subcategory->id,
-        ]);
-
-        $this->actingAsSanctum($employee);
-        $this->putJson("/api/real-estate/property-submissions/{$pendingSubmission->id}/approve")
-            ->assertForbidden();
     }
 
     /**

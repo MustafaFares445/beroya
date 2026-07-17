@@ -96,15 +96,16 @@ class RealEstateAccessService
     public function visibleUsersQuery(User $user): Builder
     {
         $query = User::query();
+        $provinceId = $this->provinceId($user);
 
         return match ($this->level($user)) {
             1 => $query,
             2 => $query
                 ->whereIn('permetions_level', [3, 4])
-                ->where(function (Builder $query) use ($user): void {
-                    $query->where('real_estate_province_id', $this->provinceId($user))
-                        ->orWhereHas('realEstateOffice', function (Builder $officeQuery) use ($user): void {
-                            $officeQuery->where('province_id', $this->provinceId($user));
+                ->where(function (Builder $query) use ($provinceId): void {
+                    $query->where('real_estate_province_id', $provinceId)
+                        ->orWhereHas('realEstateOffice', function (Builder $officeQuery) use ($provinceId): void {
+                            $officeQuery->where('province_id', $provinceId);
                         });
                 }),
             3 => $query
@@ -143,11 +144,10 @@ class RealEstateAccessService
         User $actor,
         User $target,
         int $targetLevel,
-        ?int $provinceId,
         ?int $officeId
     ): bool {
         return $this->canViewUser($actor, $target)
-            && $this->canCreateUser($actor, $targetLevel, $provinceId, $officeId);
+            && $this->canCreateUser($actor, $targetLevel, null, $officeId);
     }
 
     public function canDeleteUser(User $actor, User $target): bool

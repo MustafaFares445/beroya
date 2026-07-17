@@ -3,7 +3,6 @@
 namespace App\Support;
 
 use App\Models\RealEstateOffice;
-use App\Models\User;
 
 final class RealEstate
 {
@@ -186,35 +185,6 @@ final class RealEstate
         $label = config('real_estate.real_estate_roles.'.$role.'.label');
 
         return is_string($label) && $label !== '' ? $label : null;
-    }
-
-    public static function canCreateLookupData(User $user): bool
-    {
-        return in_array((int) $user->permetions_level, [1, 2, 3], true);
-    }
-
-    public static function canManageLookupData(User $user): bool
-    {
-        return in_array((int) $user->permetions_level, [1, 2], true);
-    }
-
-    public static function canManageProperties(User $user): bool
-    {
-        return in_array((int) $user->permetions_level, [1, 2, 3], true)
-            || (int) ($user->real_estate_office_id ?? 0) > 0;
-    }
-
-    public static function canReviewPropertySubmissions(User $user): bool
-    {
-        if (in_array((int) $user->permetions_level, [1, 2], true)) {
-            return true;
-        }
-
-        return in_array(
-            self::roleLabel($user->real_estate_role, $user->permetions_level),
-            ['مدير محافظة', 'مدير مكتب'],
-            true
-        );
     }
 
     /**

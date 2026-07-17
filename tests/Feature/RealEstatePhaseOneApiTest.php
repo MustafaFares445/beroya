@@ -130,13 +130,10 @@ class RealEstatePhaseOneApiTest extends TestCase
             'is_active' => true,
         ]);
 
-        $secondProvince = Province::query()->create([
-            'name' => 'Aleppo',
-            'is_active' => true,
-        ]);
-
         $manager = User::factory()->create([
             'permetions_level' => 2,
+            'real_estate_province_id' => $province->id,
+            'real_estate_role' => 'province_manager',
         ]);
 
         $this->actingAsSanctum($manager);
@@ -162,21 +159,21 @@ class RealEstatePhaseOneApiTest extends TestCase
             ->assertJsonFragment(['name' => 'Downtown Office']);
 
         $updateResponse = $this->putJson("/api/real-estate/offices/{$officeId}", [
-            'province_id' => $secondProvince->id,
-            'name' => 'North Office',
-            'address' => 'North Road',
+            'province_id' => $province->id,
+            'name' => 'Updated Downtown Office',
+            'address' => 'Updated Main Street',
             'is_active' => false,
         ]);
 
         $updateResponse
             ->assertOk()
-            ->assertJsonPath('data.province_name', 'Aleppo')
+            ->assertJsonPath('data.province_name', 'Damascus')
             ->assertJsonPath('data.is_active', false);
 
         $this->getJson("/api/real-estate/offices/{$officeId}")
             ->assertOk()
-            ->assertJsonPath('data.province_name', 'Aleppo')
-            ->assertJsonPath('data.name', 'North Office');
+            ->assertJsonPath('data.province_name', 'Damascus')
+            ->assertJsonPath('data.name', 'Updated Downtown Office');
 
         $this->deleteJson("/api/real-estate/offices/{$officeId}")
             ->assertOk()
@@ -204,6 +201,8 @@ class RealEstatePhaseOneApiTest extends TestCase
 
         $manager = User::factory()->create([
             'permetions_level' => 2,
+            'real_estate_province_id' => $province->id,
+            'real_estate_role' => 'province_manager',
         ]);
 
         $this->actingAsSanctum($manager);

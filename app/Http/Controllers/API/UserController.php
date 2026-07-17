@@ -92,14 +92,12 @@ class UserController extends Controller
 
         $payload = $request->validated();
         $targetPermission = (int) $payload['permetions_level'];
-        $provinceId = isset($payload['real_estate_province_id']) ? (int) $payload['real_estate_province_id'] : null;
         $officeId = isset($payload['real_estate_office_id']) ? (int) $payload['real_estate_office_id'] : null;
 
         if (! $this->realEstateAccessService->canUpdateUser(
             $authenticatedUser,
             $user,
             $targetPermission,
-            $provinceId,
             $officeId
         )) {
             return ApiResponse::failureData('your computer harmly damaged', 403, 'responses.forbidden');
