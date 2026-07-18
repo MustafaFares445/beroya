@@ -24,10 +24,12 @@ class UserResource extends JsonResource
             'real_estate_office_id' => $this->real_estate_office_id,
             'real_estate_office_name' => $this->realEstateOffice?->name,
             'real_estate_role' => $this->real_estate_role,
-            'real_estate_role_label' => RealEstate::roleLabel(
-                $this->real_estate_role,
-                $this->permetions_level !== null ? (int) $this->permetions_level : null
-            ),
+            'real_estate_role_label' => $this->isRealEstateUser()
+                ? RealEstate::roleLabel(
+                    $this->real_estate_role,
+                    $this->permetions_level !== null ? (int) $this->permetions_level : null
+                )
+                : null,
             'permetions_level' => $this->permetions_level,
             'salary' => $this->salary,
             'phone' => $this->phone,

@@ -95,7 +95,11 @@ class RealEstateAccessService
      */
     public function visibleUsersQuery(User $user): Builder
     {
-        $query = User::query();
+        $query = User::query()->where(function (Builder $query): void {
+            $query->whereNotNull('real_estate_province_id')
+                ->orWhereNotNull('real_estate_office_id')
+                ->orWhereNotNull('real_estate_role');
+        });
         $provinceId = $this->provinceId($user);
 
         return match ($this->level($user)) {
@@ -117,6 +121,10 @@ class RealEstateAccessService
 
     public function canViewUser(User $actor, User $target): bool
     {
+        if (! $actor->isRealEstateUser() || ! $target->isRealEstateUser()) {
+            return false;
+        }
+
         return match ($this->level($actor)) {
             1 => true,
             2 => in_array($this->level($target), [3, 4], true)
@@ -129,6 +137,10 @@ class RealEstateAccessService
 
     public function canCreateUser(User $actor, int $targetLevel, ?int $provinceId, ?int $officeId): bool
     {
+        if (! $actor->isRealEstateUser()) {
+            return false;
+        }
+
         return match ($this->level($actor)) {
             1 => true,
             2 => in_array($targetLevel, [3, 4], true)

@@ -7,6 +7,7 @@ use App\Http\Requests\StoreUserRequest;
 use App\Http\Requests\UpdateUserRequest;
 use App\Http\Resources\UserResource;
 use App\Models\User;
+use App\Services\CarUserAccessService;
 use App\Services\RealEstateAccessService;
 use App\Services\UserService;
 use App\Support\ApiResponse;
@@ -17,7 +18,8 @@ class UserController extends Controller
 {
     public function __construct(
         private readonly UserService $userService,
-        private readonly RealEstateAccessService $realEstateAccessService
+        private readonly RealEstateAccessService $realEstateAccessService,
+        private readonly CarUserAccessService $carUserAccessService
     ) {}
 
     public function index(Request $request): JsonResponse
@@ -27,12 +29,20 @@ class UserController extends Controller
             return ApiResponse::failureMessage('responses.auth.token_invalid', 401);
         }
 
-        if (! $this->realEstateAccessService->canListUsers($authenticatedUser)) {
+        $usesRealEstatePermissions = $authenticatedUser->isRealEstateUser();
+        $canListUsers = $usesRealEstatePermissions
+            ? $this->realEstateAccessService->canListUsers($authenticatedUser)
+            : $this->carUserAccessService->canListUsers($authenticatedUser);
+
+        if (! $canListUsers) {
             return ApiResponse::failureData('your computer harmly damaged', 403, 'responses.forbidden');
         }
 
-        $users = $this->realEstateAccessService
-            ->visibleUsersQuery($authenticatedUser)
+        $usersQuery = $usesRealEstatePermissions
+            ? $this->realEstateAccessService->visibleUsersQuery($authenticatedUser)
+            : $this->carUserAccessService->visibleUsersQuery($authenticatedUser);
+
+        $users = $usersQuery
             ->with(['realEstateProvince', 'realEstateOffice.province'])
             ->get();
 
@@ -48,15 +58,24 @@ class UserController extends Controller
 
         $payload = $request->validated();
         $targetPermission = (int) $payload['permetions_level'];
+        $usesRealEstatePermissions = $authenticatedUser->isRealEstateUser();
         $provinceId = isset($payload['real_estate_province_id']) ? (int) $payload['real_estate_province_id'] : null;
         $officeId = isset($payload['real_estate_office_id']) ? (int) $payload['real_estate_office_id'] : null;
 
-        if (! $this->realEstateAccessService->canCreateUser(
-            $authenticatedUser,
-            $targetPermission,
-            $provinceId,
-            $officeId
-        )) {
+        $canCreateUser = $usesRealEstatePermissions
+            ? $this->realEstateAccessService->canCreateUser(
+                $authenticatedUser,
+                $targetPermission,
+                $provinceId,
+                $officeId
+            )
+            : $this->carUserAccessService->canCreateUser(
+                $authenticatedUser,
+                (int) $payload['gallery_id'],
+                $targetPermission
+            );
+
+        if (! $canCreateUser) {
             return ApiResponse::failureData('your computer harmly damaged', 403, 'responses.forbidden');
         }
 
@@ -74,7 +93,12 @@ class UserController extends Controller
             return ApiResponse::failureMessage('responses.auth.token_invalid', 401);
         }
 
-        if (! $this->realEstateAccessService->canViewUser($authenticatedUser, $user)) {
+        $usesRealEstatePermissions = $authenticatedUser->isRealEstateUser();
+        $canViewUser = $usesRealEstatePermissions
+            ? $this->realEstateAccessService->canViewUser($authenticatedUser, $user)
+            : $this->carUserAccessService->canViewUser($authenticatedUser, $user);
+
+        if (! $canViewUser) {
             return ApiResponse::failureData('your computer harmly damaged', 403, 'responses.forbidden');
         }
 
@@ -92,14 +116,19 @@ class UserController extends Controller
 
         $payload = $request->validated();
         $targetPermission = (int) $payload['permetions_level'];
+        $usesRealEstatePermissions = $authenticatedUser->isRealEstateUser();
         $officeId = isset($payload['real_estate_office_id']) ? (int) $payload['real_estate_office_id'] : null;
 
-        if (! $this->realEstateAccessService->canUpdateUser(
-            $authenticatedUser,
-            $user,
-            $targetPermission,
-            $officeId
-        )) {
+        $canUpdateUser = $usesRealEstatePermissions
+            ? $this->realEstateAccessService->canUpdateUser(
+                $authenticatedUser,
+                $user,
+                $targetPermission,
+                $officeId
+            )
+            : $this->carUserAccessService->canUpdateUser($authenticatedUser, $user);
+
+        if (! $canUpdateUser) {
             return ApiResponse::failureData('your computer harmly damaged', 403, 'responses.forbidden');
         }
 
@@ -117,7 +146,12 @@ class UserController extends Controller
             return ApiResponse::failureMessage('responses.auth.token_invalid', 401);
         }
 
-        if (! $this->realEstateAccessService->canDeleteUser($authenticatedUser, $user)) {
+        $usesRealEstatePermissions = $authenticatedUser->isRealEstateUser();
+        $canDeleteUser = $usesRealEstatePermissions
+            ? $this->realEstateAccessService->canDeleteUser($authenticatedUser, $user)
+            : $this->carUserAccessService->canDeleteUser($authenticatedUser);
+
+        if (! $canDeleteUser) {
             return ApiResponse::failureData('your computer harmly damaged', 403, 'responses.forbidden');
         }
 

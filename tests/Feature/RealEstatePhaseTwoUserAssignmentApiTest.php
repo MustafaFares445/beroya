@@ -127,6 +127,7 @@ class RealEstatePhaseTwoUserAssignmentApiTest extends TestCase
             'user_name' => 'admin',
             'password' => Hash::make('secret'),
             'gallery_id' => 0,
+            'real_estate_role' => 'general_manager',
             'permetions_level' => 1,
             'salary' => 0,
             'phone' => '0999000000',

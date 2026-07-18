@@ -76,6 +76,13 @@ class User extends Authenticatable
         return $this->belongsTo(Province::class, 'real_estate_province_id');
     }
 
+    public function isRealEstateUser(): bool
+    {
+        return $this->real_estate_province_id !== null
+            || $this->real_estate_office_id !== null
+            || $this->real_estate_role !== null;
+    }
+
     public function accounts(): HasMany
     {
         return $this->hasMany(Account::class, 'user_id');

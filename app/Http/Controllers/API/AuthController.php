@@ -8,7 +8,6 @@ use App\Http\Resources\UserResource;
 use App\Models\User;
 use App\Services\AuthService;
 use App\Support\ApiResponse;
-use App\Support\RealEstate;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -35,10 +34,6 @@ class AuthController extends Controller
         $tokenExpiry = $result['token_expiry'];
         $user->loadMissing(['realEstateProvince', 'realEstateOffice.province']);
         $userData = UserResource::make($user)->resolve();
-        $userData['real_estate_role_label'] = RealEstate::roleLabel(
-            $user->real_estate_role,
-            $user->permetions_level !== null ? (int) $user->permetions_level : null
-        );
 
         return ApiResponse::success($userData, 200, [
             'token' => $token,
