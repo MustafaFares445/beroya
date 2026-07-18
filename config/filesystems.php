@@ -29,16 +29,15 @@ return [
     */
 
     'disks' => [
-
-        'local' => [
-            'driver' => 'local',
-            'root' => storage_path('app/private'),
-            'serve' => true,
-            'visibility' => 'private',
-            'throw' => false,
-            'report' => false,
-        ],
-
+    'local' => [
+        'driver' => 'local',
+        'root' => storage_path('app/private'),
+        'url' => rtrim(env('APP_URL', 'http://localhost'), '/').'/private-files',
+        'serve' => true,
+        'visibility' => 'private',
+        'throw' => false,
+        'report' => false,
+    ],
         'public' => [
             'driver' => 'local',
             'root' => storage_path('app/public'),
