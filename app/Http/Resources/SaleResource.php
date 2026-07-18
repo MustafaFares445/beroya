@@ -5,6 +5,7 @@ namespace App\Http\Resources;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\URL;
 
 class SaleResource extends JsonResource
 {
@@ -67,6 +68,13 @@ class SaleResource extends JsonResource
             return null;
         }
 
-        return $disk->temporaryUrl($path, now()->addMinutes(30));
+        $relativeUrl = URL::temporarySignedRoute(
+            'sale-media.show',
+            now()->addMinutes(30),
+            ['file' => basename($path)],
+            absolute: false,
+        );
+
+        return rtrim((string) config('app.url'), '/').$relativeUrl;
     }
 }
